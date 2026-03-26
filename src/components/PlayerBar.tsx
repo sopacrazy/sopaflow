@@ -43,8 +43,11 @@ export function PlayerBar() {
       try {
         const query = `${currentTrack.name} ${currentTrack.artist} official audio`;
         console.log("SEARCHING:", query);
-        // Try our local backend server
-        const response = await axios.get(`http://localhost:3001/api/search-youtube`, {
+        
+        // Use relative /api endpoint in production (Vercel) and localhost:3001 in development
+        const env = (import.meta as any).env;
+        const apiUrl = env?.MODE === 'development' ? 'http://localhost:3001' : '';
+        const response = await axios.get(`${apiUrl}/api/search-youtube`, {
           params: { q: query },
           timeout: 5000 
         });
