@@ -11,10 +11,10 @@ export function EmptyState({
 }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
-      <div className="w-16 h-16 rounded-full bg-zinc-50 flex items-center justify-center mb-4 border border-zinc-200 shadow-sm">
-        <Music className="w-8 h-8 text-zinc-400" />
+      <div className="w-16 h-16 rounded-full bg-zinc-900/50 flex items-center justify-center mb-4 border border-zinc-800 shadow-sm">
+        <Music className="w-8 h-8 text-zinc-500" />
       </div>
-      <h3 className="text-lg font-bold text-zinc-800 mb-2">{title}</h3>
+      <h3 className="text-lg font-bold text-zinc-200 mb-2">{title}</h3>
       <p className="text-sm text-zinc-500 max-w-sm">{description}</p>
     </div>
   );

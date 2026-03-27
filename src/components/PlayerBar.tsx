@@ -160,7 +160,7 @@ export function PlayerBar() {
         </div>
       )}
 
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white shadow-[0_-10px_40px_rgba(0,0,0,0.04)] sm:rounded-t-3xl px-4 sm:px-8 py-3 h-[72px] sm:h-[100px]">
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-[#121212] border-t border-zinc-900 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] sm:rounded-t-3xl px-4 sm:px-8 py-3 h-[72px] sm:h-[100px]">
         <div className="max-w-screen-2xl mx-auto flex items-center justify-between gap-4 h-full">
         
         {/* Invisible Player - NOT using display:none because it can block audio/video playback */}
@@ -197,7 +197,7 @@ export function PlayerBar() {
            className="flex items-center gap-4 w-full sm:w-[30%] min-w-0 cursor-pointer group"
            onClick={() => setIsExpanded(true)}
         >
-          <div className="relative w-12 h-12 sm:w-16 sm:h-16 rounded-xl overflow-hidden flex-shrink-0 bg-zinc-100 shadow-md transform transition-transform group-hover:scale-105">
+          <div className="relative w-12 h-12 sm:w-16 sm:h-16 rounded-xl overflow-hidden flex-shrink-0 bg-zinc-800 shadow-md transform transition-transform group-hover:scale-105">
             {currentTrack.image && (
                 <img
                     src={currentTrack.image}
@@ -208,9 +208,9 @@ export function PlayerBar() {
             )}
           </div>
           <div className="flex flex-col min-w-0 pr-2 sm:pr-0 flex-1">
-            <span className="text-sm font-bold text-zinc-900 truncate">
+            <span className="text-sm font-bold text-white truncate">
               {currentTrack.name}
-              <span className="text-zinc-500 font-normal ml-1 hidden sm:inline">- {currentTrack.artist}</span>
+              <span className="text-zinc-400 font-normal ml-1 hidden sm:inline">- {currentTrack.artist}</span>
             </span>
             <div className="flex items-center gap-2 mt-1">
                <span className="text-xs text-zinc-400 font-semibold tracking-wide">
@@ -218,9 +218,9 @@ export function PlayerBar() {
                </span>
                <button 
                  onClick={(e) => { e.stopPropagation(); toggleFavorite(currentTrack); }}
-                 className="p-1 hover:bg-zinc-100 rounded-full transition-colors hidden sm:block"
+                 className="p-1 hover:bg-zinc-800 rounded-full transition-colors hidden sm:block"
                >
-                 <Heart className={cn("w-3.5 h-3.5", isFavorite(currentTrack.id) ? "fill-rose-500 text-rose-500" : "text-zinc-300 hover:text-rose-500")} />
+                 <Heart className={cn("w-3.5 h-3.5", isFavorite(currentTrack.id) ? "fill-[#20D760] text-[#20D760]" : "text-zinc-500 hover:text-white")} />
                </button>
             </div>
           </div>
@@ -228,7 +228,7 @@ export function PlayerBar() {
           {/* Mobile Play/Pause (hidden on sm+) */}
           <button
               onClick={(e) => { e.stopPropagation(); togglePlayPause(); }}
-              className="sm:hidden w-10 h-10 flex items-center justify-center rounded-full text-white bg-[#20D760] shadow-[0_4px_10px_rgba(34,197,94,0.4)] active:scale-95 transition-transform"
+              className="sm:hidden w-10 h-10 flex items-center justify-center rounded-full text-black bg-[#20D760] shadow-[0_4px_10px_rgba(34,197,94,0.2)] active:scale-95 transition-transform"
           >
               {isLoadingAudio ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -247,7 +247,7 @@ export function PlayerBar() {
               onClick={toggleShuffle}
               className={cn(
                 "p-2 transition-colors",
-                isShuffling ? "text-[#20D760]" : "text-zinc-400 hover:text-zinc-800"
+                isShuffling ? "text-[#20D760]" : "text-zinc-400 hover:text-white"
               )}
             >
               <Shuffle className="w-5 h-5" />
@@ -255,14 +255,14 @@ export function PlayerBar() {
             
             <button
               onClick={prevTrack}
-              className="text-zinc-600 hover:text-zinc-900 transition-colors"
+              className="text-zinc-400 hover:text-white transition-colors"
             >
               <SkipBack className="w-6 h-6 fill-current" />
             </button>
             
             <button
               onClick={togglePlayPause}
-              className="w-[52px] h-[52px] flex items-center justify-center rounded-full bg-[#20D760] text-white hover:scale-105 active:scale-95 transition-all shadow-[0_4px_20px_rgba(34,197,94,0.4)] disabled:opacity-50"
+              className="w-[52px] h-[52px] flex items-center justify-center rounded-full bg-[#20D760] text-black hover:scale-105 active:scale-95 transition-all shadow-[0_4px_20px_rgba(34,197,94,0.2)] disabled:opacity-50"
             >
               {isLoadingAudio ? (
                 <Loader2 className="w-6 h-6 animate-spin" />
@@ -275,7 +275,7 @@ export function PlayerBar() {
             
             <button
               onClick={nextTrack}
-              className="text-zinc-600 hover:text-zinc-900 transition-colors"
+              className="text-zinc-400 hover:text-white transition-colors"
             >
               <SkipForward className="w-6 h-6 fill-current" />
             </button>
@@ -284,7 +284,7 @@ export function PlayerBar() {
               onClick={toggleRepeat}
               className={cn(
                 "p-2 transition-colors",
-                isRepeating ? "text-[#20D760]" : "text-zinc-400 hover:text-zinc-800"
+                isRepeating ? "text-[#20D760]" : "text-zinc-400 hover:text-white"
               )}
             >
               <Repeat className="w-5 h-5" />
@@ -294,13 +294,13 @@ export function PlayerBar() {
 
         {/* Extra Controls */}
         <div className="hidden sm:flex items-center justify-end w-[30%] gap-4">
-          <button className="text-zinc-400 hover:text-zinc-800 transition-colors">
+          <button className="text-zinc-400 hover:text-white transition-colors">
             <MoreHorizontal className="w-5 h-5" />
           </button>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setVolume(volume === 0 ? 0.8 : 0)}
-              className="text-zinc-400 hover:text-zinc-800 transition-colors"
+              className="text-zinc-400 hover:text-white transition-colors"
             >
               {volume === 0 ? (
                 <VolumeX className="w-5 h-5" />
@@ -314,7 +314,7 @@ export function PlayerBar() {
           </div>
           <button 
              onClick={() => setIsExpanded(true)} 
-             className="w-8 h-8 flex items-center justify-center rounded-full border border-zinc-200 text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 transition-colors ml-2"
+             className="w-8 h-8 flex items-center justify-center rounded-full border border-zinc-700 text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors ml-2"
           >
             <ChevronUp className="w-5 h-5" />
           </button>

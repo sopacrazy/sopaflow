@@ -62,7 +62,7 @@ export function VolumeControl() {
   return (
     <div
       ref={trackRef}
-      className="relative w-24 h-1 bg-zinc-200 rounded-full cursor-pointer group"
+      className="relative w-24 h-1 bg-zinc-800 rounded-full cursor-pointer group"
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
