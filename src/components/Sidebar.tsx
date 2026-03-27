@@ -1,4 +1,4 @@
-import { Home, Search, Library, PlusSquare, Heart, Headphones, X } from "lucide-react";
+import { Home, Search, Library, PlusSquare, Heart, Music2, X, Radio, Video, Users } from "lucide-react";
 import { cn } from "../utils/cn";
 import { usePlaylistStore } from "../store/usePlaylistStore";
 
@@ -18,87 +18,96 @@ export function Sidebar({ currentTab = "home", onTabChange }: SidebarProps) {
   };
 
   return (
-    <aside className="hidden md:flex flex-col w-64 h-full bg-black border-r border-zinc-800/20 p-6 gap-8">
+    <aside className="hidden md:flex flex-col w-[260px] h-full bg-white border-r border-zinc-100 p-6 gap-8 shadow-[10px_0_40px_rgba(0,0,0,0.02)] z-10">
       {/* Logo */}
-      <div className="flex items-center gap-2 text-green-500">
-        <Headphones className="w-8 h-8" />
-        <span className="text-2xl font-bold tracking-tight text-white italic">
-          SopaMusic
+      <div className="flex items-center gap-2 text-zinc-900">
+        <span className="text-xl font-extrabold tracking-tight text-zinc-900 uppercase">
+          STORYBOARD
         </span>
+        <div className="w-6 h-6 bg-zinc-900 rounded-full flex items-center justify-center ml-1">
+            <Music2 className="w-3.5 h-3.5 text-white" />
+        </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex flex-col gap-4">
+      <nav className="flex flex-col gap-2">
         <button
           onClick={() => onTabChange?.("home")}
           className={cn(
-            "flex items-center gap-4 text-sm font-semibold transition-colors duration-200",
-            currentTab === "home" ? "text-white" : "text-zinc-400 hover:text-white"
+            "flex items-center gap-4 text-sm font-bold transition-all duration-200 px-4 py-3 rounded-xl",
+            currentTab === "home" 
+              ? "bg-[#20D760] text-white shadow-lg shadow-[#20D760]/30" 
+              : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50"
           )}
         >
-          <Home className="w-6 h-6" />
-          Início
+          <Home className="w-5 h-5" />
+          Home
         </button>
         <button
-          className="flex items-center gap-4 text-sm font-semibold text-zinc-400 hover:text-white transition-colors duration-200"
+          className="flex items-center gap-4 text-sm font-bold text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 transition-all duration-200 px-4 py-3 rounded-xl"
         >
-          <Search className="w-6 h-6" />
-          Buscar
+          <Search className="w-5 h-5" />
+          Browse
         </button>
         <button
-          className="flex items-center gap-4 text-sm font-semibold text-zinc-400 hover:text-white transition-colors duration-200"
+          className="flex items-center gap-4 text-sm font-bold text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 transition-all duration-200 px-4 py-3 rounded-xl"
         >
-          <Library className="w-6 h-6" />
-          Sua Biblioteca
+          <Radio className="w-5 h-5" />
+          Radio
+        </button>
+        <button
+          className="flex items-center gap-4 text-sm font-bold text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 transition-all duration-200 px-4 py-3 rounded-xl"
+        >
+          <Video className="w-5 h-5" />
+          Video
+        </button>
+        <button
+          className="flex items-center gap-4 text-sm font-bold text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 transition-all duration-200 px-4 py-3 rounded-xl"
+        >
+          <Users className="w-5 h-5" />
+          Community
         </button>
       </nav>
 
       {/* Playlists Extra */}
-      <div className="flex flex-col gap-4 mt-4">
-        <button 
-          onClick={handleCreatePlaylist}
-          className="flex items-center gap-4 text-sm font-semibold text-zinc-400 hover:text-white transition-colors"
-        >
-          <div className="bg-zinc-800 p-1.5 rounded-sm">
-            <PlusSquare className="w-4 h-4" />
-          </div>
-          Criar playlist
-        </button>
-        <button
-          onClick={() => onTabChange?.("favorites")}
-          className={cn(
-            "flex items-center gap-4 text-sm font-semibold transition-colors",
-            currentTab === "favorites" ? "text-white" : "text-zinc-400 hover:text-white"
-          )}
-        >
-          <div className="bg-gradient-to-br from-indigo-700 to-indigo-300 p-1.5 rounded-sm">
-            <Heart className="w-4 h-4 fill-white text-white" />
-          </div>
-          Músicas Curtidas
-        </button>
+      <div className="mt-2">
+        <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest px-2 block mb-4">Your Library</span>
+        <div className="flex flex-col gap-1">
+          <button 
+            onClick={handleCreatePlaylist}
+            className="flex items-center gap-4 text-sm font-bold text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 transition-all px-2 py-2 rounded-lg"
+          >
+            <PlusSquare className="w-5 h-5" />
+            Criar playlist
+          </button>
+          <button
+            onClick={() => onTabChange?.("favorites")}
+            className={cn(
+              "flex items-center gap-4 text-sm font-bold transition-all px-2 py-2 rounded-lg",
+              currentTab === "favorites" ? "text-rose-500 bg-rose-50" : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50"
+            )}
+          >
+            <Heart className={cn("w-5 h-5", currentTab === "favorites" ? "fill-current" : "")} />
+            Músicas Curtidas
+          </button>
+        </div>
       </div>
 
-      <hr className="border-zinc-800/40" />
-
       {/* Custom Playlists */}
-      <div className="flex-1 overflow-y-auto flex flex-col gap-2 text-sm text-zinc-400">
+      <div className="flex-1 overflow-y-auto flex flex-col gap-1 text-sm text-zinc-500 font-semibold pl-2 pr-1 custom-scrollbar-light">
         {playlists.map((pl) => (
            <div 
              key={pl.id}
-             className="group flex items-center justify-between"
+             className={cn(
+               "group flex items-center justify-between px-2 py-2 rounded-lg cursor-pointer transition-colors",
+               currentTab === pl.id ? "bg-[#20D760]/10 text-[#20D760]" : "hover:bg-zinc-50 hover:text-zinc-900"
+             )}
+             onClick={() => onTabChange?.(pl.id)}
            >
-             <p 
-               onClick={() => onTabChange?.(pl.id)}
-               className={cn(
-                 "px-1 hover:text-white cursor-pointer truncate flex-1",
-                 currentTab === pl.id ? "text-green-500 font-bold" : ""
-               )}
-             >
-               {pl.name}
-             </p>
+             <p className="truncate flex-1">{pl.name}</p>
              <button 
-               onClick={() => removePlaylist(pl.id)} 
-               className="opacity-0 group-hover:opacity-100 hover:text-white text-zinc-500 transition-opacity p-1"
+               onClick={(e) => { e.stopPropagation(); removePlaylist(pl.id); }} 
+               className="opacity-0 group-hover:opacity-100 hover:text-rose-500 transition-opacity p-1"
                title="Remover Playlist"
              >
                <X className="w-4 h-4" />

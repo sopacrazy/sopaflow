@@ -18,21 +18,21 @@ export function SearchBar({ onSearch, placeholder = "Buscar músicas para foco..
   return (
     <div className="relative w-full max-w-2xl mx-auto group">
       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-        <Search className="h-5 w-5 text-zinc-400 group-focus-within:text-indigo-400 transition-colors" />
+        <Search className="h-4 w-4 text-zinc-400 group-focus-within:text-[#20D760] transition-colors" />
       </div>
       <input
         type="text"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        className="block w-full pl-11 pr-10 py-3.5 bg-zinc-900/50 border border-zinc-800 rounded-2xl text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all shadow-sm backdrop-blur-sm"
+        className="block w-full pl-11 pr-10 py-3 bg-white border border-zinc-200 rounded-full text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#20D760]/20 focus:border-[#20D760]/50 transition-all shadow-[0_5px_15px_rgba(0,0,0,0.02)]"
         placeholder={placeholder}
       />
       {value && (
         <button
           onClick={() => setValue("")}
-          className="absolute inset-y-0 right-0 pr-4 flex items-center text-zinc-400 hover:text-zinc-200 transition-colors"
+          className="absolute inset-y-0 right-0 pr-4 flex items-center text-zinc-400 hover:text-zinc-600 transition-colors"
         >
-          <X className="h-5 w-5" />
+          <X className="h-4 w-4" />
         </button>
       )}
     </div>

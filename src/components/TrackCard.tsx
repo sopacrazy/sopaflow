@@ -49,7 +49,7 @@ export function TrackCard({ track, queue }: TrackCardProps) {
 
   return (
     <div
-      className="group relative flex flex-col gap-4 p-4 rounded-lg bg-zinc-900/40 hover:bg-zinc-800/80 transition-all duration-300 cursor-pointer shadow-lg hover:shadow-2xl"
+      className="group relative flex flex-col gap-3 p-3 sm:p-4 rounded-2xl bg-white border border-zinc-100 hover:border-zinc-200 transition-all duration-300 cursor-pointer shadow-[0_5px_15px_rgba(0,0,0,0.02)] hover:shadow-[0_8px_25px_rgba(0,0,0,0.06)]"
       onClick={handlePlayClick}
     >
       <div className="relative aspect-square w-full overflow-hidden rounded-md shadow-lg bg-zinc-800">
@@ -76,7 +76,7 @@ export function TrackCard({ track, queue }: TrackCardProps) {
           )}
         >
           <button
-            className="w-12 h-12 flex items-center justify-center rounded-full bg-green-500 text-black hover:scale-110 active:scale-95 transition-all shadow-xl"
+            className="w-12 h-12 flex items-center justify-center rounded-full bg-[#20D760] text-white hover:scale-110 active:scale-95 transition-all shadow-lg shadow-[#20D760]/30"
             onClick={handlePlayClick}
           >
             {isCurrentTrack && isPlaying ? (
@@ -90,7 +90,7 @@ export function TrackCard({ track, queue }: TrackCardProps) {
         {/* Add to Playlist Button */}
         <button
           onClick={handleAddToPlaylistClick}
-          className="absolute top-2 right-10 p-1.5 rounded-full transition-all duration-200 text-zinc-400 opacity-0 group-hover:opacity-100 hover:text-white"
+          className="absolute top-2 right-10 p-1.5 rounded-full transition-all duration-200 bg-white/50 backdrop-blur-md text-zinc-700 opacity-0 group-hover:opacity-100 hover:bg-white"
           title="Adicionar à sua playlist"
         >
           <Plus className="w-4 h-4" />
@@ -100,28 +100,28 @@ export function TrackCard({ track, queue }: TrackCardProps) {
         <button
           onClick={handleFavoriteClick}
           className={cn(
-            "absolute top-2 right-2 p-1.5 rounded-full transition-all duration-200",
+            "absolute top-2 right-2 p-1.5 rounded-full transition-all duration-200 bg-white/50 backdrop-blur-md",
             isFavoriteTrack
-              ? "text-green-500 opacity-100"
-              : "text-zinc-400 opacity-0 group-hover:opacity-100 hover:text-white"
+              ? "text-rose-500 opacity-100 bg-white"
+              : "text-zinc-700 opacity-0 group-hover:opacity-100 hover:bg-white"
           )}
         >
           <Heart className={cn("w-4 h-4", isFavoriteTrack && "fill-current")} />
         </button>
       </div>
 
-      <div className="flex flex-col min-w-0">
+      <div className="flex flex-col min-w-0 px-1">
         <h3
           className={cn(
-            "font-bold text-sm truncate leading-tight",
-            isCurrentTrack ? "text-green-500" : "text-white"
+            "font-extrabold text-sm truncate leading-tight",
+            isCurrentTrack ? "text-[#20D760]" : "text-zinc-900"
           )}
           title={track.name}
         >
           {track.name}
         </h3>
         <p
-          className="text-xs text-zinc-400 truncate mt-1.5 font-medium"
+          className="text-xs text-zinc-500 truncate mt-1 font-semibold"
           title={track.artist}
         >
           {track.artist}

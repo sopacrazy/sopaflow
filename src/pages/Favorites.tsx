@@ -9,17 +9,17 @@ export function Favorites() {
 
   return (
     <div className="flex flex-col gap-10 animate-in pt-8">
-      <div className="flex flex-col md:flex-row items-end gap-6 pb-6 border-b border-zinc-800/50">
-        <div className="w-48 h-48 bg-gradient-to-br from-indigo-700 to-indigo-300 rounded-lg shadow-2xl flex items-center justify-center">
-            <Heart className="w-24 h-24 text-white fill-white shadow-xl" />
+      <div className="flex flex-col md:flex-row items-end gap-6 pb-6 border-b border-zinc-200">
+        <div className="w-48 h-48 bg-gradient-to-br from-rose-400 to-rose-200 rounded-2xl flex items-center justify-center shadow-[0_10px_30px_rgba(244,63,94,0.2)]">
+            <Heart className="w-24 h-24 text-white fill-white drop-shadow-md" />
         </div>
         <div className="flex flex-col gap-2">
-            <span className="text-sm font-bold uppercase tracking-wider text-zinc-300">Playlist</span>
-            <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-white">
+            <span className="text-sm font-bold uppercase tracking-wider text-zinc-500">Playlist</span>
+            <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter text-zinc-900">
                 Músicas Curtidas
             </h1>
-            <div className="flex items-center gap-2 mt-4">
-                <span className="font-bold text-sm text-white">{favorites.length} músicas</span>
+            <div className="flex items-center gap-2 mt-2">
+                <span className="font-bold text-sm text-zinc-600">{favorites.length} músicas</span>
             </div>
         </div>
       </div>
