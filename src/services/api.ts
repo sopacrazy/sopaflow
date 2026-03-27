@@ -19,15 +19,15 @@ export const jamendoApi = {
       const results = response.data.results || [];
       
       return results.map((track: any) => {
-        // High quality cover fix (from iTunes 100x100 to 600x600)
-        const highResColor = track.artworkUrl100.replace("100x100bb.jpg", "600x600bb.jpg");
+        // Use 300x300 cover instead of 600x600 to load much faster
+        const optimizedImage = track.artworkUrl100.replace("100x100bb.jpg", "300x300bb.jpg");
         
         return {
           id: track.trackId.toString(),
           name: track.trackName,
           artist: track.artistName,
           album: track.collectionName || "Single",
-          image: highResColor,
+          image: optimizedImage,
           // For now we don't have the YouTube URL here, 
           // we'll resolve it when the user clicks Play.
           // Or we use the 30s preview as a backup.
