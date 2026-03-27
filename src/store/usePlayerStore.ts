@@ -119,7 +119,7 @@ export const usePlayerStore = create<PlayerState>()(
       setYoutubeUrl: (url) => set({ youtubeUrl: url }),
     }),
     {
-      name: "sopaflow-player-storage",
+      name: "SopaMusic-player-storage",
       partialize: (state) => ({
         volume: state.volume,
         currentTrack: state.currentTrack,

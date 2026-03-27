@@ -29,7 +29,7 @@ export const useFavoritesStore = create<FavoritesState>()(
       },
     }),
     {
-      name: "sopaflow-favorites-storage",
+      name: "SopaMusic-favorites-storage",
     }
   )
 );

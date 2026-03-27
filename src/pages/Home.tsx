@@ -15,7 +15,7 @@ const CATEGORIES = [
   { label: "Hip-Hop", query: "hip hop", image: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=400&q=80" },
   { label: "Lo-fi", query: "lofi", image: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&q=80" },
   { label: "Piano", query: "piano", image: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=400&q=80" },
-  { label: "Indie", query: "indie", image: "https://images.unsplash.com/photo-1453738773917-9c8fdfb306dd?w=400&q=80" },
+  { label: "Indie", query: "indie", image: "https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=300&q=80" },
 ];
 
 export function Home() {

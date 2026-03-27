@@ -13,7 +13,7 @@ export function Header({ currentTab = "home", onTabChange }: HeaderProps) {
         <div className="flex items-center gap-2 text-indigo-400">
           <Headphones className="w-6 h-6" />
           <span className="text-xl font-semibold tracking-tight text-zinc-100">
-            SopaFlow
+            SopaMusic
           </span>
         </div>
         

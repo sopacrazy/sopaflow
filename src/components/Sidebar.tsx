@@ -1,19 +1,29 @@
-import { Home, Search, Library, PlusSquare, Heart, Music2, Headphones } from "lucide-react";
+import { Home, Search, Library, PlusSquare, Heart, Headphones, X } from "lucide-react";
 import { cn } from "../utils/cn";
+import { usePlaylistStore } from "../store/usePlaylistStore";
 
 interface SidebarProps {
-  currentTab?: "home" | "favorites";
-  onTabChange?: (tab: "home" | "favorites") => void;
+  currentTab?: string;
+  onTabChange?: (tab: string) => void;
 }
 
 export function Sidebar({ currentTab = "home", onTabChange }: SidebarProps) {
+  const { playlists, addPlaylist, removePlaylist } = usePlaylistStore();
+
+  const handleCreatePlaylist = () => {
+    const name = window.prompt("Nome da nova playlist:");
+    if (name && name.trim().length > 0) {
+      addPlaylist(name.trim());
+    }
+  };
+
   return (
     <aside className="hidden md:flex flex-col w-64 h-full bg-black border-r border-zinc-800/20 p-6 gap-8">
       {/* Logo */}
       <div className="flex items-center gap-2 text-green-500">
         <Headphones className="w-8 h-8" />
         <span className="text-2xl font-bold tracking-tight text-white italic">
-          SopaFlow
+          SopaMusic
         </span>
       </div>
 
@@ -45,7 +55,10 @@ export function Sidebar({ currentTab = "home", onTabChange }: SidebarProps) {
 
       {/* Playlists Extra */}
       <div className="flex flex-col gap-4 mt-4">
-        <button className="flex items-center gap-4 text-sm font-semibold text-zinc-400 hover:text-white transition-colors">
+        <button 
+          onClick={handleCreatePlaylist}
+          className="flex items-center gap-4 text-sm font-semibold text-zinc-400 hover:text-white transition-colors"
+        >
           <div className="bg-zinc-800 p-1.5 rounded-sm">
             <PlusSquare className="w-4 h-4" />
           </div>
@@ -67,13 +80,31 @@ export function Sidebar({ currentTab = "home", onTabChange }: SidebarProps) {
 
       <hr className="border-zinc-800/40" />
 
-      {/* Playlist List (Dummy) */}
+      {/* Custom Playlists */}
       <div className="flex-1 overflow-y-auto flex flex-col gap-2 text-sm text-zinc-400">
-        <p className="px-1 hover:text-white cursor-pointer truncate">Minha Playlist #1</p>
-        <p className="px-1 hover:text-white cursor-pointer truncate">Top Global</p>
-        <p className="px-1 hover:text-white cursor-pointer truncate">Foco no Código</p>
-        <p className="px-1 hover:text-white cursor-pointer truncate">90's Rock</p>
-        <p className="px-1 hover:text-white cursor-pointer truncate">Lo-fi Study</p>
+        {playlists.map((pl) => (
+           <div 
+             key={pl.id}
+             className="group flex items-center justify-between"
+           >
+             <p 
+               onClick={() => onTabChange?.(pl.id)}
+               className={cn(
+                 "px-1 hover:text-white cursor-pointer truncate flex-1",
+                 currentTab === pl.id ? "text-green-500 font-bold" : ""
+               )}
+             >
+               {pl.name}
+             </p>
+             <button 
+               onClick={() => removePlaylist(pl.id)} 
+               className="opacity-0 group-hover:opacity-100 hover:text-white text-zinc-500 transition-opacity p-1"
+               title="Remover Playlist"
+             >
+               <X className="w-4 h-4" />
+             </button>
+           </div>
+        ))}
       </div>
     </aside>
   );

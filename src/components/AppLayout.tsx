@@ -4,8 +4,8 @@ import { PlayerBar } from "./PlayerBar";
 
 interface AppLayoutProps {
   children: ReactNode;
-  currentTab?: "home" | "favorites";
-  onTabChange?: (tab: "home" | "favorites") => void;
+  currentTab?: string;
+  onTabChange?: (tab: string) => void;
 }
 
 export function AppLayout({ children, currentTab, onTabChange }: AppLayoutProps) {

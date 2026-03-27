@@ -1,9 +1,11 @@
 import React from "react";
-import { Heart, Play, Pause } from "lucide-react";
+import { Heart, Play, Pause, Plus } from "lucide-react";
 import { Track } from "../types";
 import { usePlayerStore } from "../store/usePlayerStore";
 import { useFavoritesStore } from "../store/useFavoritesStore";
+import { usePlaylistStore } from "../store/usePlaylistStore";
 import { cn } from "../utils/cn";
+import { toast } from "sonner";
 
 interface TrackCardProps {
   track: Track;
@@ -13,6 +15,7 @@ interface TrackCardProps {
 export function TrackCard({ track, queue }: TrackCardProps) {
   const { currentTrack, isPlaying, playTrack, togglePlayPause } = usePlayerStore();
   const { isFavorite, toggleFavorite } = useFavoritesStore();
+  const { playlists, addTrackToPlaylist } = usePlaylistStore();
 
   const isCurrentTrack = currentTrack?.id === track.id;
   const isFavoriteTrack = isFavorite(track.id);
@@ -29,6 +32,17 @@ export function TrackCard({ track, queue }: TrackCardProps) {
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     toggleFavorite(track);
+  };
+
+  const handleAddToPlaylistClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (playlists.length === 0) {
+      toast.error("Crie uma playlist primeiro no menu lateral!");
+      return;
+    }
+    const targetPlaylist = playlists[0];
+    addTrackToPlaylist(targetPlaylist.id, track);
+    toast.success(`Música adicionada à ${targetPlaylist.name}`);
   };
 
   const placeholderImg = `https://picsum.photos/seed/${track.id}/400/400`;
@@ -72,6 +86,15 @@ export function TrackCard({ track, queue }: TrackCardProps) {
             )}
           </button>
         </div>
+
+        {/* Add to Playlist Button */}
+        <button
+          onClick={handleAddToPlaylistClick}
+          className="absolute top-2 right-10 p-1.5 rounded-full transition-all duration-200 text-zinc-400 opacity-0 group-hover:opacity-100 hover:text-white"
+          title="Adicionar à sua playlist"
+        >
+          <Plus className="w-4 h-4" />
+        </button>
 
         {/* Favorite Button */}
         <button
