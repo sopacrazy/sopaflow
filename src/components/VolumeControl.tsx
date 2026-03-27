@@ -62,17 +62,17 @@ export function VolumeControl() {
   return (
     <div
       ref={trackRef}
-      className="relative w-24 h-1.5 bg-zinc-800 rounded-full cursor-pointer group"
+      className="relative w-24 h-1 bg-zinc-200 rounded-full cursor-pointer group"
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
     >
       <div
-        className="absolute top-0 left-0 h-full bg-zinc-300 rounded-full group-hover:bg-indigo-400 transition-colors"
+        className="absolute top-0 left-0 h-full bg-[#20D760] rounded-full transition-colors"
         style={{ width: `${percentage}%` }}
       />
       <div
-        className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+        className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
         style={{ left: `calc(${percentage}% - 6px)` }}
       />
     </div>

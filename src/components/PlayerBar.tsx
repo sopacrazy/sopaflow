@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import ReactPlayer from "react-player";
-import { Play, Pause, SkipBack, SkipForward, Repeat, Shuffle, Volume2, VolumeX, Loader2, ChevronDown } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Repeat, Shuffle, Volume2, VolumeX, Loader2, ChevronDown, ChevronUp, Heart, MoreHorizontal } from "lucide-react";
 import { usePlayerStore } from "../store/usePlayerStore";
+import { useFavoritesStore } from "../store/useFavoritesStore";
 import { ProgressBar } from "./ProgressBar";
 import { VolumeControl } from "./VolumeControl";
+import { formatTime } from "../utils/formatTime";
 import { cn } from "../utils/cn";
 import axios from "axios";
 
@@ -27,6 +29,8 @@ export function PlayerBar() {
     isLoadingAudio,
     setLoadingAudio
   } = usePlayerStore();
+  
+  const { isFavorite, toggleFavorite } = useFavoritesStore();
 
   const playerRef = useRef<any>(null);
   const [duration, setDuration] = useState(0);
@@ -156,7 +160,7 @@ export function PlayerBar() {
         </div>
       )}
 
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-black border-t border-zinc-900 px-2 sm:px-4 py-3 h-[72px] sm:h-24">
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white shadow-[0_-10px_40px_rgba(0,0,0,0.04)] sm:rounded-t-3xl px-4 sm:px-8 py-3 h-[72px] sm:h-[100px]">
         <div className="max-w-screen-2xl mx-auto flex items-center justify-between gap-4 h-full">
         
         {/* Invisible Player - NOT using display:none because it can block audio/video playback */}
@@ -190,10 +194,10 @@ export function PlayerBar() {
 
         {/* Track Info */}
         <div 
-           className="flex items-center gap-3 sm:gap-4 w-full sm:w-[30%] min-w-0 cursor-pointer"
+           className="flex items-center gap-4 w-full sm:w-[30%] min-w-0 cursor-pointer group"
            onClick={() => setIsExpanded(true)}
         >
-          <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-md overflow-hidden flex-shrink-0 bg-zinc-800 shadow-xl">
+          <div className="relative w-12 h-12 sm:w-16 sm:h-16 rounded-xl overflow-hidden flex-shrink-0 bg-zinc-100 shadow-md transform transition-transform group-hover:scale-105">
             {currentTrack.image && (
                 <img
                     src={currentTrack.image}
@@ -204,65 +208,74 @@ export function PlayerBar() {
             )}
           </div>
           <div className="flex flex-col min-w-0 pr-2 sm:pr-0 flex-1">
-            <span className="text-sm font-semibold text-white truncate hover:underline">
+            <span className="text-sm font-bold text-zinc-900 truncate">
               {currentTrack.name}
+              <span className="text-zinc-500 font-normal ml-1 hidden sm:inline">- {currentTrack.artist}</span>
             </span>
-            <span className="text-xs text-zinc-400 truncate hover:underline">
-              {currentTrack.artist}
-            </span>
+            <div className="flex items-center gap-2 mt-1">
+               <span className="text-xs text-zinc-400 font-semibold tracking-wide">
+                 {formatTime(progress)} / {formatTime(duration || currentTrack.duration)}
+               </span>
+               <button 
+                 onClick={(e) => { e.stopPropagation(); toggleFavorite(currentTrack); }}
+                 className="p-1 hover:bg-zinc-100 rounded-full transition-colors hidden sm:block"
+               >
+                 <Heart className={cn("w-3.5 h-3.5", isFavorite(currentTrack.id) ? "fill-rose-500 text-rose-500" : "text-zinc-300 hover:text-rose-500")} />
+               </button>
+            </div>
           </div>
 
           {/* Mobile Play/Pause (hidden on sm+) */}
           <button
               onClick={(e) => { e.stopPropagation(); togglePlayPause(); }}
-              className="sm:hidden w-12 h-12 flex items-center justify-center rounded-full text-white bg-transparent active:scale-95 transition-transform"
+              className="sm:hidden w-10 h-10 flex items-center justify-center rounded-full text-white bg-[#20D760] shadow-[0_4px_10px_rgba(34,197,94,0.4)] active:scale-95 transition-transform"
           >
               {isLoadingAudio ? (
-                <Loader2 className="w-6 h-6 animate-spin" />
+                <Loader2 className="w-5 h-5 animate-spin" />
               ) : isPlaying ? (
-                <Pause className="w-6 h-6 fill-current" />
+                <Pause className="w-5 h-5 fill-current" />
               ) : (
-                <Play className="w-6 h-6 fill-current" />
+                <Play className="w-5 h-5 fill-current ml-0.5" />
               )}
           </button>
         </div>
 
-        {/* Controls & Progress */}
-        <div className="hidden sm:flex flex-col items-center w-[40%] max-w-[700px] gap-2">
-          <div className="flex items-center gap-6">
+        {/* Controls */}
+        <div className="hidden sm:flex items-center justify-center w-[40%] max-w-[700px]">
+          <div className="flex items-center gap-8">
             <button
               onClick={toggleShuffle}
               className={cn(
-                "p-1.5 rounded-full transition-colors",
-                isShuffling ? "text-green-500" : "text-zinc-400 hover:text-white"
+                "p-2 transition-colors",
+                isShuffling ? "text-[#20D760]" : "text-zinc-400 hover:text-zinc-800"
               )}
             >
-              <Shuffle className="w-4 h-4" />
+              <Shuffle className="w-5 h-5" />
             </button>
             
             <button
               onClick={prevTrack}
-              className="text-zinc-400 hover:text-white transition-colors"
+              className="text-zinc-600 hover:text-zinc-900 transition-colors"
             >
               <SkipBack className="w-6 h-6 fill-current" />
             </button>
             
             <button
               onClick={togglePlayPause}
-              className="w-10 h-10 flex items-center justify-center rounded-full bg-white text-black hover:scale-105 active:scale-95 transition-all shadow-md disabled:opacity-50"
+              className="w-[52px] h-[52px] flex items-center justify-center rounded-full bg-[#20D760] text-white hover:scale-105 active:scale-95 transition-all shadow-[0_4px_20px_rgba(34,197,94,0.4)] disabled:opacity-50"
             >
               {isLoadingAudio ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <Loader2 className="w-6 h-6 animate-spin" />
               ) : isPlaying ? (
-                <Pause className="w-5 h-5 fill-current" />
+                <Pause className="w-6 h-6 fill-current" />
               ) : (
-                <Play className="w-5 h-5 fill-current ml-1" />
+                <Play className="w-6 h-6 fill-current ml-1" />
               )}
             </button>
             
             <button
               onClick={nextTrack}
-              className="text-zinc-400 hover:text-white transition-colors"
+              className="text-zinc-600 hover:text-zinc-900 transition-colors"
             >
               <SkipForward className="w-6 h-6 fill-current" />
             </button>
@@ -270,37 +283,41 @@ export function PlayerBar() {
             <button
               onClick={toggleRepeat}
               className={cn(
-                "p-1.5 rounded-full transition-colors",
-                isRepeating ? "text-green-500" : "text-zinc-400 hover:text-white"
+                "p-2 transition-colors",
+                isRepeating ? "text-[#20D760]" : "text-zinc-400 hover:text-zinc-800"
               )}
             >
-              <Repeat className="w-4 h-4" />
+              <Repeat className="w-5 h-5" />
             </button>
-          </div>
-          
-          <div className="w-full flex items-center gap-2 text-xs font-medium tabular-nums text-zinc-400">
-             <ProgressBar 
-                duration={duration || currentTrack.duration} 
-                onSeek={handleSeek} 
-             />
           </div>
         </div>
 
-        {/* Volume Control */}
-        <div className="hidden sm:flex items-center justify-end w-[30%] gap-3">
-          <button
-            onClick={() => setVolume(volume === 0 ? 0.8 : 0)}
-            className="text-zinc-400 hover:text-white transition-colors"
-          >
-            {volume === 0 ? (
-              <VolumeX className="w-5 h-5" />
-            ) : (
-              <Volume2 className="w-5 h-5" />
-            )}
+        {/* Extra Controls */}
+        <div className="hidden sm:flex items-center justify-end w-[30%] gap-4">
+          <button className="text-zinc-400 hover:text-zinc-800 transition-colors">
+            <MoreHorizontal className="w-5 h-5" />
           </button>
-          <div className="w-24">
-            <VolumeControl />
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setVolume(volume === 0 ? 0.8 : 0)}
+              className="text-zinc-400 hover:text-zinc-800 transition-colors"
+            >
+              {volume === 0 ? (
+                <VolumeX className="w-5 h-5" />
+              ) : (
+                <Volume2 className="w-5 h-5" />
+              )}
+            </button>
+            <div className="w-20 mt-1">
+              <VolumeControl />
+            </div>
           </div>
+          <button 
+             onClick={() => setIsExpanded(true)} 
+             className="w-8 h-8 flex items-center justify-center rounded-full border border-zinc-200 text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 transition-colors ml-2"
+          >
+            <ChevronUp className="w-5 h-5" />
+          </button>
         </div>
       </div>
     </div>
