@@ -57,7 +57,7 @@ export function PlayerBar() {
         const apiUrl = env?.MODE === 'development' ? 'http://localhost:3001' : '';
         const response = await axios.get(`${apiUrl}/api/search-youtube`, {
           params: { q: query },
-          timeout: 5000 
+          timeout: 10000 
         });
         
         if (response.data.url) {
@@ -235,8 +235,8 @@ export function PlayerBar() {
         
         {/* Invisible Player - NOT using display:none because it can block audio/video playback */}
         <div 
-          className="fixed opacity-0 pointer-events-none" 
-          style={{ width: '300px', height: '300px', zIndex: -50, top: 0, left: 0 }}
+          className="fixed opacity-1 pointer-events-none" 
+          style={{ width: '1px', height: '1px', zIndex: -50, top: 0, left: 0 }}
         >
            {youtubeUrl && (
               <Player
@@ -255,7 +255,14 @@ export function PlayerBar() {
                 height="100%"
                 config={{
                    youtube: {
-                      playerVars: { autoplay: 0, controls: 0, disablekb: 1 }
+                      playerVars: { 
+                        autoplay: 1, 
+                        controls: 0, 
+                        disablekb: 1, 
+                        modestbranding: 1, 
+                        playsinline: 1,
+                        origin: window.location.origin
+                      }
                    }
                 }}
               />
