@@ -6,6 +6,7 @@ import { useFavoritesStore } from "../store/useFavoritesStore";
 import { usePlaylistStore } from "../store/usePlaylistStore";
 import { cn } from "../utils/cn";
 import { toast } from "sonner";
+import { useAuth } from "../context/AuthContext";
 
 interface TrackCardProps {
   track: Track;
@@ -16,6 +17,7 @@ export function TrackCard({ track, queue }: TrackCardProps) {
   const { currentTrack, isPlaying, playTrack, togglePlayPause } = usePlayerStore();
   const { isFavorite, toggleFavorite } = useFavoritesStore();
   const { playlists, addTrackToPlaylist } = usePlaylistStore();
+  const { user } = useAuth();
 
   const isCurrentTrack = currentTrack?.id === track.id;
   const isFavoriteTrack = isFavorite(track.id);
@@ -31,7 +33,7 @@ export function TrackCard({ track, queue }: TrackCardProps) {
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    toggleFavorite(track);
+    toggleFavorite(track, user?.id);
   };
 
   const handleAddToPlaylistClick = (e: React.MouseEvent) => {
@@ -76,7 +78,7 @@ export function TrackCard({ track, queue }: TrackCardProps) {
           )}
         >
           <button
-            className="w-12 h-12 flex items-center justify-center rounded-full bg-[#20D760] text-black hover:scale-110 active:scale-95 transition-all shadow-lg shadow-[#20D760]/30"
+            className="w-12 h-12 flex items-center justify-center rounded-full bg-[#a855f7] text-white hover:scale-110 active:scale-95 transition-all shadow-lg shadow-[#a855f7]/30"
             onClick={handlePlayClick}
           >
             {isCurrentTrack && isPlaying ? (
@@ -102,7 +104,7 @@ export function TrackCard({ track, queue }: TrackCardProps) {
           className={cn(
             "absolute top-2 right-2 p-1.5 rounded-full transition-all duration-200 bg-black/50 backdrop-blur-md",
             isFavoriteTrack
-              ? "text-[#20D760] opacity-100 bg-black"
+              ? "text-[#a855f7] opacity-100 bg-black"
               : "text-zinc-300 opacity-0 group-hover:opacity-100 hover:bg-black hover:text-white"
           )}
         >
@@ -114,7 +116,7 @@ export function TrackCard({ track, queue }: TrackCardProps) {
         <h3
           className={cn(
             "font-extrabold text-sm truncate leading-tight",
-            isCurrentTrack ? "text-[#20D760]" : "text-white"
+            isCurrentTrack ? "text-[#a855f7]" : "text-white"
           )}
           title={track.name}
         >

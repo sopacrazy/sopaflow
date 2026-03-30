@@ -12,7 +12,7 @@ import { usePlayerStore } from "../store/usePlayerStore";
 
 const CATEGORIES = [
   { label: "Pop", query: "Pop Hits 2024", image: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400&q=80", bgClass: "bg-gradient-to-br from-[#4A148C] to-[#311B92]" },
-  { label: "Rock", query: "Classic Rock", image: "https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?w=400&q=80", bgClass: "bg-gradient-to-br from-[#212121] to-[#000000]" },
+  { label: "Rock", query: "Queen AC/DC Nirvana Bon Jovi Guns N Roses Rock Classics", image: "https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?w=400&q=80", bgClass: "bg-gradient-to-br from-[#121212] to-[#8b5cf6]" },
   { label: "Hip-Hop", query: "Hip Hop 2024", image: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=400&q=80", bgClass: "bg-gradient-to-br from-[#880E4F] to-[#4A148C]" },
   { label: "Lo-fi", query: "Lofi Beats", image: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&q=80", bgClass: "bg-gradient-to-br from-[#311B92] to-[#1A237E]" },
   { label: "Piano", query: "Piano Relax", image: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=400&q=80", bgClass: "bg-gradient-to-br from-[#004D40] to-[#006064]" },
@@ -20,7 +20,7 @@ const CATEGORIES = [
 ];
 
 const FEATURED_PLAYLISTS = [
-  { title: "Rock Anos 2000", query: "Rock 2000s Essentials", image: "https://images.unsplash.com/photo-1459749411177-042180ce673c?w=400&q=80" },
+  { title: "Rock Anos 2000", query: "Classic Rock 2000s Pop Punk", image: "https://images.unsplash.com/photo-1524368535928-5b5e00ddc76b?w=500&q=80" },
   { title: "Top Sertanejo", query: "Sertanejo 2024", image: "https://images.unsplash.com/photo-1593697821028-7cc59cfd7399?w=400&q=80" },
   { title: "Phonk Night", query: "Phonk Type Beats", image: "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=400&q=80" },
   { title: "Jazz de Elite", query: "Smooth Jazz Collection", image: "https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=400&q=80" },

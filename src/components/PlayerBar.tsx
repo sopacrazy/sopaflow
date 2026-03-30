@@ -9,6 +9,8 @@ import { formatTime } from "../utils/formatTime";
 import { cn } from "../utils/cn";
 import axios from "axios";
 import { toast } from "sonner";
+import { useAuth } from "../context/AuthContext";
+import { supabase } from "../lib/supabase";
 
 export function PlayerBar() {
   const {
@@ -33,6 +35,8 @@ export function PlayerBar() {
     canSkip,
     registerSkip
   } = usePlayerStore();
+  
+  const { user } = useAuth();
   
   const { isFavorite, toggleFavorite } = useFavoritesStore();
 
@@ -136,6 +140,26 @@ export function PlayerBar() {
 
   }, [currentTrack, isPlaying, youtubeUrl, canSkip, nextTrack, prevTrack, registerSkip, togglePlayPause, duration, progress]);
 
+  // Sync Listening History with Database
+  useEffect(() => {
+    if (!currentTrack || !user?.id) return;
+
+    const recordHistory = async () => {
+        try {
+            await supabase.from("listening_history").insert({
+                user_id: user.id,
+                track_id: currentTrack.id,
+                track_data: currentTrack,
+                played_at: new Date().toISOString()
+            });
+        } catch (err) {
+            // Silently ignore history recording errors to not disrupt playback
+        }
+    };
+
+    recordHistory();
+  }, [currentTrack?.id, user?.id]);
+
   if (!currentTrack) return null;
 
   const handleSeek = (time: number) => {
@@ -201,7 +225,7 @@ export function PlayerBar() {
             </div>
 
             <div className="w-full max-w-[400px] flex justify-between items-center mt-2 px-2">
-               <button onClick={toggleShuffle} className={cn("p-2 transition-colors", isShuffling ? "text-green-500" : "text-zinc-400 hover:text-white")}>
+               <button onClick={toggleShuffle} className={cn("p-2 transition-colors", isShuffling ? "text-violet-500" : "text-zinc-400 hover:text-white")}>
                  <Shuffle className="w-6 h-6" />
                </button>
                <button onClick={prevTrack} className="text-zinc-100 hover:text-white p-2 transition-colors">
@@ -209,7 +233,7 @@ export function PlayerBar() {
                </button>
                <button
                  onClick={togglePlayPause}
-                 className="w-20 h-20 flex items-center justify-center rounded-full bg-green-500 text-black shadow-lg hover:scale-105 active:scale-95 transition-all"
+                 className="w-20 h-20 flex items-center justify-center rounded-full bg-violet-500 text-white shadow-lg hover:scale-105 active:scale-95 transition-all"
                >
                  {isLoadingAudio ? (
                    <Loader2 className="w-8 h-8 animate-spin" />
@@ -222,7 +246,7 @@ export function PlayerBar() {
                <button onClick={nextTrack} className="text-zinc-100 p-2 hover:text-white transition-colors">
                  <SkipForward className="w-10 h-10 fill-current" />
                </button>
-               <button onClick={toggleRepeat} className={cn("p-2 transition-colors", isRepeating ? "text-green-500" : "text-zinc-400 hover:text-white")}>
+               <button onClick={toggleRepeat} className={cn("p-2 transition-colors", isRepeating ? "text-violet-500" : "text-zinc-400 hover:text-white")}>
                  <Repeat className="w-6 h-6" />
                </button>
             </div>
@@ -293,12 +317,12 @@ export function PlayerBar() {
                <span className="text-xs text-zinc-400 font-semibold tracking-wide">
                  {formatTime(progress)} / {formatTime(duration || currentTrack.duration)}
                </span>
-               <button 
-                 onClick={(e) => { e.stopPropagation(); toggleFavorite(currentTrack); }}
-                 className="p-1 hover:bg-zinc-800 rounded-full transition-colors hidden sm:block"
-               >
-                 <Heart className={cn("w-3.5 h-3.5", isFavorite(currentTrack.id) ? "fill-[#20D760] text-[#20D760]" : "text-zinc-500 hover:text-white")} />
-               </button>
+                <button 
+                  onClick={(e) => { e.stopPropagation(); toggleFavorite(currentTrack, user?.id); }}
+                  className="p-1 hover:bg-zinc-800 rounded-full transition-colors hidden sm:block"
+                >
+                  <Heart className={cn("w-3.5 h-3.5", isFavorite(currentTrack.id) ? "fill-[#a855f7] text-[#a855f7]" : "text-zinc-500 hover:text-white")} />
+                </button>
             </div>
           </div>
 
@@ -313,7 +337,7 @@ export function PlayerBar() {
 
             <button
                 onClick={(e) => { e.stopPropagation(); togglePlayPause(); }}
-                className="w-10 h-10 flex items-center justify-center rounded-full text-black bg-[#20D760] shadow-[0_4px_10px_rgba(34,197,94,0.2)] active:scale-95 transition-transform"
+                className="w-10 h-10 flex items-center justify-center rounded-full text-white bg-[#a855f7] shadow-[0_4px_10px_rgba(168,85,247,0.2)] active:scale-95 transition-transform"
             >
                 {isLoadingAudio ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
@@ -350,7 +374,7 @@ export function PlayerBar() {
               onClick={toggleShuffle}
               className={cn(
                 "p-2 transition-colors",
-                isShuffling ? "text-[#20D760]" : "text-zinc-400 hover:text-white"
+                isShuffling ? "text-[#a855f7]" : "text-zinc-400 hover:text-white"
               )}
             >
               <Shuffle className="w-5 h-5" />
@@ -365,7 +389,7 @@ export function PlayerBar() {
             
             <button
               onClick={togglePlayPause}
-              className="w-[52px] h-[52px] flex items-center justify-center rounded-full bg-[#20D760] text-black hover:scale-105 active:scale-95 transition-all shadow-[0_4px_20px_rgba(34,197,94,0.2)] disabled:opacity-50"
+              className="w-[52px] h-[52px] flex items-center justify-center rounded-full bg-[#a855f7] text-white hover:scale-105 active:scale-95 transition-all shadow-[0_4px_20px_rgba(168,85,247,0.2)] disabled:opacity-50"
             >
               {isLoadingAudio ? (
                 <Loader2 className="w-6 h-6 animate-spin" />
@@ -396,7 +420,7 @@ export function PlayerBar() {
               onClick={toggleRepeat}
               className={cn(
                 "p-2 transition-colors",
-                isRepeating ? "text-[#20D760]" : "text-zinc-400 hover:text-white"
+                isRepeating ? "text-[#a855f7]" : "text-zinc-400 hover:text-white"
               )}
             >
               <Repeat className="w-5 h-5" />

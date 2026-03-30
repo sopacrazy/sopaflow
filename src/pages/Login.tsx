@@ -18,7 +18,7 @@ const Login: React.FC = () => {
 
   // Load remembered email
   React.useEffect(() => {
-    const savedEmail = localStorage.getItem("SopaMusic-remembered-email");
+    const savedEmail = localStorage.getItem("PumpBeats-remembered-email");
     if (savedEmail) {
       setEmail(savedEmail);
       setRememberMe(true);
@@ -45,9 +45,9 @@ const Login: React.FC = () => {
       if (error) throw error;
 
       if (rememberMe) {
-        localStorage.setItem("SopaMusic-remembered-email", email);
+        localStorage.setItem("PumpBeats-remembered-email", email);
       } else {
-        localStorage.removeItem("SopaMusic-remembered-email");
+        localStorage.removeItem("PumpBeats-remembered-email");
       }
 
       toast.success("Login realizado com sucesso!");
@@ -89,7 +89,7 @@ const Login: React.FC = () => {
           <button 
             type="button" 
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-5 top-11 text-zinc-600 hover:text-green-500 transition-colors"
+            className="absolute right-5 top-11 text-zinc-600 hover:text-violet-500 transition-colors"
           >
             {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
           </button>
@@ -101,17 +101,17 @@ const Login: React.FC = () => {
               type="checkbox" 
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
-              className="w-4 h-4 rounded border-white/10 bg-zinc-950 checked:bg-green-500 transition-colors" 
+              className="w-4 h-4 rounded border-white/10 bg-zinc-950 checked:bg-violet-500 transition-colors" 
             />
             <span className="text-sm text-zinc-500 group-hover:text-zinc-400">Lembrar de mim</span>
           </label>
-          <Link to="/forgot-password" title="Recuperar Senha" className="text-sm text-green-500 hover:underline">Esqueceu a senha?</Link>
+          <Link to="/forgot-password" title="Recuperar Senha" className="text-sm text-violet-500 hover:underline">Esqueceu a senha?</Link>
         </div>
 
         <button 
           type="submit" 
           disabled={loading}
-          className="w-full bg-green-500 text-black py-4 rounded-3xl font-black text-lg hover:scale-105 active:scale-95 transition-all shadow-xl shadow-green-500/10 disabled:opacity-50"
+          className="w-full bg-violet-500 text-black py-4 rounded-3xl font-black text-lg hover:scale-105 active:scale-95 transition-all shadow-xl shadow-violet-500/10 disabled:opacity-50"
         >
           {loading ? "Entrando..." : "Entrar"}
         </button>
@@ -131,7 +131,7 @@ const Login: React.FC = () => {
         </button>
 
         <p className="text-center text-zinc-500 text-sm mt-4 pb-2">
-          Não tem uma conta? <Link to="/register" title="Criar Conta" className="text-green-500 font-bold hover:underline">Criar agora</Link>
+          Não tem uma conta? <Link to="/register" title="Criar Conta" className="text-violet-500 font-bold hover:underline">Criar agora</Link>
         </p>
       </form>
     </AuthLayout>

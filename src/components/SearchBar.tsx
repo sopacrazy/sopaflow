@@ -7,7 +7,7 @@ interface SearchBarProps {
   placeholder?: string;
 }
 
-export function SearchBar({ onSearch, placeholder = "Buscar músicas para foco..." }: SearchBarProps) {
+export function SearchBar({ onSearch, placeholder = "Buscar músicas, álbuns ou artistas..." }: SearchBarProps) {
   const [value, setValue] = useState("");
   const debouncedValue = useDebounce(value, 500);
 

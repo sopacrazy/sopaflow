@@ -48,6 +48,6 @@ export const usePlaylistStore = create<PlaylistState>()(
          set({ playlists: updated });
       }
     }),
-    { name: "SopaMusic-playlists-storage" }
+    { name: "PumpBeats-playlists-storage" }
   )
 );

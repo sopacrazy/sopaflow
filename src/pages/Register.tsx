@@ -59,7 +59,7 @@ const Register: React.FC = () => {
   return (
     <AuthLayout 
       title="Criar sua conta" 
-      subtitle="Junte-se ao SopaMusic e comece a ouvir agora mesmo."
+      subtitle="Junte-se ao PumpBeats e comece a ouvir agora mesmo."
     >
       <form onSubmit={handleRegister} className="space-y-3">
         <InputField 
@@ -107,14 +107,14 @@ const Register: React.FC = () => {
           <button 
             type="submit" 
             disabled={loading}
-            className="w-full bg-green-500 text-black py-4 rounded-3xl font-black text-lg hover:scale-105 active:scale-95 transition-all shadow-xl shadow-green-500/10 disabled:opacity-50"
+            className="w-full bg-violet-500 text-black py-4 rounded-3xl font-black text-lg hover:scale-105 active:scale-95 transition-all shadow-xl shadow-violet-500/10 disabled:opacity-50"
           >
             {loading ? "Criando..." : "Criar conta"}
           </button>
         </div>
 
         <p className="text-center text-zinc-500 text-sm mt-4 pb-2">
-          Já tem uma conta? <Link to="/login" title="Entrar" className="text-green-500 font-bold hover:underline">Entrar agora</Link>
+          Já tem uma conta? <Link to="/login" title="Entrar" className="text-violet-500 font-bold hover:underline">Entrar agora</Link>
         </p>
       </form>
     </AuthLayout>

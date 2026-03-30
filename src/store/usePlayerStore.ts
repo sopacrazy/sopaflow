@@ -22,6 +22,7 @@ interface PlayerState {
   setQueue: (tracks: Track[], startIndex?: number) => void;
   playTrack: (track: Track, queue?: Track[]) => void;
   togglePlayPause: () => void;
+  setIsPlaying: (playing: boolean) => void;
   nextTrack: () => void;
   prevTrack: () => void;
   setVolume: (volume: number) => void;
@@ -44,6 +45,7 @@ interface PlayerState {
   artistAlbums: any[];
   setArtistAlbums: (albums: any[]) => void;
   resetHome: () => void;
+  closePlayer: () => void;
 
   // Plan/Skip logic
   plan: 'free' | 'premium';
@@ -93,6 +95,15 @@ export const usePlayerStore = create<PlayerState>()(
         artistAlbums: []
       }),
 
+      closePlayer: () => set({
+        currentTrack: null,
+        isPlaying: false,
+        youtubeUrl: null,
+        queue: [],
+        currentIndex: -1,
+        progress: 0
+      }),
+
       setQueue: (tracks, startIndex = 0) => {
         set({
           queue: tracks,
@@ -131,6 +142,8 @@ export const usePlayerStore = create<PlayerState>()(
       togglePlayPause: () => {
         set((state) => ({ isPlaying: !state.isPlaying }));
       },
+
+      setIsPlaying: (playing) => set({ isPlaying: playing }),
 
       nextTrack: () => {
         const { queue, currentIndex, isRepeating, isShuffling } = get();
@@ -221,12 +234,9 @@ export const usePlayerStore = create<PlayerState>()(
       },
     }),
     {
-      name: "SopaMusic-player-storage",
+      name: "PumpBeats-player-storage",
       partialize: (state) => ({
         volume: state.volume,
-        currentTrack: state.currentTrack,
-        queue: state.queue,
-        currentIndex: state.currentIndex,
         isRepeating: state.isRepeating,
         isShuffling: state.isShuffling,
         skipCount: state.skipCount,

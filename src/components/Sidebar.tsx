@@ -1,10 +1,11 @@
-import { Home, Search, Library, PlusSquare, Heart, Music2, X, Radio, Video, Users } from "lucide-react";
+import { Home, Search, Library, PlusSquare, Heart, Headphones, X, Radio, Video, Users } from "lucide-react";
 import { cn } from "../utils/cn";
 import { usePlaylistStore } from "../store/usePlaylistStore";
 import { useAuth } from "../context/AuthContext";
 import { usePlayerStore } from "../store/usePlayerStore";
 import { LogOut, User as UserIcon } from "lucide-react";
 import { toast } from "sonner";
+import { useState } from "react";
 
 interface SidebarProps {
   currentTab?: string;
@@ -16,6 +17,9 @@ export function Sidebar({ currentTab = "home", onTabChange }: SidebarProps) {
   const { user, signOut } = useAuth();
   const { plan, resetHome } = usePlayerStore();
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [playlistName, setPlaylistName] = useState("");
+
   const handleCreatePlaylist = () => {
     if (plan !== 'premium') {
       toast.error("Recurso Premium", {
@@ -23,9 +27,16 @@ export function Sidebar({ currentTab = "home", onTabChange }: SidebarProps) {
       });
       return;
     }
-    const name = window.prompt("Nome da nova playlist:");
-    if (name && name.trim().length > 0) {
-      addPlaylist(name.trim());
+    setIsModalOpen(true);
+  };
+
+  const handleSubmitPlaylist = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (playlistName.trim().length > 0) {
+      addPlaylist(playlistName.trim());
+      setPlaylistName("");
+      setIsModalOpen(false);
+      toast.success("Playlist criada com sucesso!");
     }
   };
 
@@ -35,14 +46,15 @@ export function Sidebar({ currentTab = "home", onTabChange }: SidebarProps) {
   };
 
   return (
+    <>
     <aside className="hidden md:flex flex-col w-[260px] h-full bg-black border-r border-zinc-900 p-6 gap-8 shadow-[10px_0_40px_rgba(0,0,0,0.5)] z-10 relative">
       {/* Logo */}
       <div className="flex items-center gap-2 text-white">
         <span className="text-xl font-extrabold tracking-tight text-white uppercase">
-          SOPAMUSIC
+          PUMPBEATS
         </span>
-        <div className="w-6 h-6 bg-[#20D760] rounded-full flex items-center justify-center ml-1 shadow-md shadow-[#20D760]/20">
-            <Music2 className="w-3.5 h-3.5 text-black" />
+        <div className="w-6 h-6 bg-[#a855f7] rounded-full flex items-center justify-center ml-1 shadow-md shadow-[#a855f7]/20">
+            <Headphones className="w-3.5 h-3.5 text-black" />
         </div>
       </div>
 
@@ -53,7 +65,7 @@ export function Sidebar({ currentTab = "home", onTabChange }: SidebarProps) {
           className={cn(
             "flex items-center gap-4 text-sm font-bold transition-all duration-200 px-4 py-3 rounded-xl",
             currentTab === "home" 
-              ? "bg-[#20D760] text-black shadow-lg shadow-[#20D760]/20" 
+              ? "bg-[#a855f7] text-black shadow-lg shadow-[#a855f7]/20" 
               : "text-zinc-400 hover:text-white hover:bg-zinc-900"
           )}
         >
@@ -101,7 +113,7 @@ export function Sidebar({ currentTab = "home", onTabChange }: SidebarProps) {
             onClick={() => onTabChange?.("favorites")}
             className={cn(
               "flex items-center gap-4 text-sm font-bold transition-all px-2 py-2 rounded-lg",
-              currentTab === "favorites" ? "text-[#20D760] bg-[#20D760]/10" : "text-zinc-400 hover:text-white hover:bg-zinc-900"
+              currentTab === "favorites" ? "text-[#a855f7] bg-[#a855f7]/10" : "text-zinc-400 hover:text-white hover:bg-zinc-900"
             )}
           >
             <Heart className={cn("w-5 h-5", currentTab === "favorites" ? "fill-current" : "")} />
@@ -117,7 +129,7 @@ export function Sidebar({ currentTab = "home", onTabChange }: SidebarProps) {
              key={pl.id}
              className={cn(
                "group flex items-center justify-between px-2 py-2 rounded-lg cursor-pointer transition-colors",
-               currentTab === pl.id ? "bg-[#20D760]/10 text-[#20D760]" : "hover:bg-zinc-900 hover:text-white"
+               currentTab === pl.id ? "bg-[#a855f7]/10 text-[#a855f7]" : "hover:bg-zinc-900 hover:text-white"
              )}
              onClick={() => onTabChange?.(pl.id)}
            >
@@ -148,7 +160,7 @@ export function Sidebar({ currentTab = "home", onTabChange }: SidebarProps) {
               <div className="flex items-center gap-2 mt-0.5">
                   <span className={cn(
                     "text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border",
-                    plan === 'premium' ? "bg-green-500/10 text-green-500 border-green-500/20" : "bg-zinc-800 text-zinc-500 border-white/5"
+                    plan === 'premium' ? "bg-violet-500/10 text-violet-400 border-violet-500/20" : "bg-zinc-800 text-zinc-500 border-white/5"
                   )}>
                     Plano {plan}
                   </span>
@@ -165,5 +177,47 @@ export function Sidebar({ currentTab = "home", onTabChange }: SidebarProps) {
         </button>
       </div>
     </aside>
+
+    {/* New Playlist Modal */}
+    {isModalOpen && (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+        <div 
+          className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <h3 className="text-2xl font-black text-white mb-2">Nova Playlist</h3>
+          <p className="text-zinc-400 text-sm mb-6">Dê um nome criativo para sua nova coleção de músicas.</p>
+          
+          <form onSubmit={handleSubmitPlaylist} className="space-y-6">
+            <input
+              autoFocus
+              type="text"
+              placeholder="Minha Playlist #1"
+              value={playlistName}
+              onChange={(e) => setPlaylistName(e.target.value)}
+              className="w-full bg-zinc-800 border-none rounded-xl px-4 py-4 text-white placeholder-zinc-500 focus:ring-2 focus:ring-[#a855f7]/50 transition-all text-lg font-bold"
+            />
+            
+            <div className="flex gap-3 mt-8">
+              <button
+                type="button"
+                onClick={() => { setIsModalOpen(false); setPlaylistName(""); }}
+                className="flex-1 px-6 py-3 rounded-xl font-bold text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={!playlistName.trim()}
+                className="flex-1 bg-[#a855f7] hover:bg-[#8b5cf6] disabled:opacity-50 disabled:cursor-not-allowed text-black font-black px-6 py-3 rounded-xl transition-all shadow-lg shadow-[#a855f7]/10"
+              >
+                Criar Playlist
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
