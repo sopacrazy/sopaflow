@@ -11,10 +11,14 @@ interface PlayerState {
   progress: number;
   isRepeating: boolean;
   isShuffling: boolean;
-  isLoadingAudio: boolean; // New state
-  youtubeUrl: string | null; // New state
+  isLoadingAudio: boolean;
+  youtubeUrl: string | null;
+  lastGenre: string | null;
+  recentlyPlayed: Track[];
   
   // Actions
+  setLastGenre: (genre: string | null) => void;
+  addToRecentlyPlayed: (track: Track) => void;
   setQueue: (tracks: Track[], startIndex?: number) => void;
   playTrack: (track: Track, queue?: Track[]) => void;
   togglePlayPause: () => void;
@@ -26,6 +30,28 @@ interface PlayerState {
   toggleShuffle: () => void;
   setLoadingAudio: (loading: boolean) => void;
   setYoutubeUrl: (url: string | null) => void;
+  playAlbum: (albumTracks: Track[]) => void;
+  
+  // Navigation & Search (Moved here to allow global reset from Sidebar)
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  selectedAlbum: any | null;
+  setSelectedAlbum: (album: any | null) => void;
+  isSearching: boolean;
+  setIsSearching: (searching: boolean) => void;
+  searchResults: Track[];
+  setSearchResults: (tracks: Track[]) => void;
+  artistAlbums: any[];
+  setArtistAlbums: (albums: any[]) => void;
+  resetHome: () => void;
+
+  // Plan/Skip logic
+  plan: 'free' | 'premium';
+  setPlan: (plan: 'free' | 'premium') => void;
+  skipCount: number;
+  lastSkipReset: number;
+  canSkip: () => boolean;
+  registerSkip: () => void;
 }
 
 export const usePlayerStore = create<PlayerState>()(
@@ -41,6 +67,31 @@ export const usePlayerStore = create<PlayerState>()(
       isShuffling: false,
       isLoadingAudio: false,
       youtubeUrl: null,
+      lastGenre: null,
+      recentlyPlayed: [],
+      plan: 'free',
+      skipCount: 0,
+      lastSkipReset: Date.now(),
+      
+      searchQuery: "",
+      selectedAlbum: null,
+      isSearching: false,
+      searchResults: [],
+      artistAlbums: [],
+
+      setSearchQuery: (query) => set({ searchQuery: query }),
+      setSelectedAlbum: (album) => set({ selectedAlbum: album }),
+      setIsSearching: (searching) => set({ isSearching: searching }),
+      setSearchResults: (tracks) => set({ searchResults: tracks }),
+      setArtistAlbums: (albums) => set({ artistAlbums: albums }),
+      
+      resetHome: () => set({ 
+        searchQuery: "", 
+        selectedAlbum: null, 
+        isSearching: false,
+        searchResults: [],
+        artistAlbums: []
+      }),
 
       setQueue: (tracks, startIndex = 0) => {
         set({
@@ -56,11 +107,24 @@ export const usePlayerStore = create<PlayerState>()(
         const newQueue = queue || state.queue;
         const index = newQueue.findIndex((t) => t.id === track.id);
         
+        // Add to recently played and set genre for taste learning
+        state.addToRecentlyPlayed(track);
+        if (track.genre) state.setLastGenre(track.genre);
+        
         set({
           currentTrack: track,
           queue: newQueue.length > 0 ? newQueue : [track],
           currentIndex: index >= 0 ? index : 0,
           isPlaying: true,
+        });
+      },
+
+      addToRecentlyPlayed: (track) => {
+        set((state) => {
+          const filtered = state.recentlyPlayed.filter((t) => t.id !== track.id);
+          return {
+            recentlyPlayed: [track, ...filtered].slice(0, 20) // Keep last 20
+          };
         });
       },
 
@@ -74,8 +138,12 @@ export const usePlayerStore = create<PlayerState>()(
 
         let nextIndex = currentIndex + 1;
 
-        if (isShuffling) {
+        if (isShuffling && queue.length > 1) {
           nextIndex = Math.floor(Math.random() * queue.length);
+          // Don't repeat current song if possible
+          while (nextIndex === currentIndex) {
+            nextIndex = Math.floor(Math.random() * queue.length);
+          }
         } else if (nextIndex >= queue.length) {
           if (isRepeating) {
             nextIndex = 0;
@@ -117,6 +185,40 @@ export const usePlayerStore = create<PlayerState>()(
       toggleShuffle: () => set((state) => ({ isShuffling: !state.isShuffling })),
       setLoadingAudio: (loading) => set({ isLoadingAudio: loading }),
       setYoutubeUrl: (url) => set({ youtubeUrl: url }),
+      setLastGenre: (genre) => set({ lastGenre: genre }),
+
+      playAlbum: (tracks) => {
+        if (!tracks || tracks.length === 0) return;
+        set({
+          queue: tracks,
+          currentIndex: 0,
+          currentTrack: tracks[0],
+          isPlaying: true,
+          progress: 0
+        });
+      },
+
+      setPlan: (plan) => set({ plan }),
+
+      canSkip: () => {
+        const { plan, skipCount, lastSkipReset } = get();
+        if (plan === 'premium') return true;
+        
+        // Reset check (1 hour)
+        const oneHour = 60 * 60 * 1000;
+        if (Date.now() - lastSkipReset > oneHour) {
+          set({ skipCount: 0, lastSkipReset: Date.now() });
+          return true;
+        }
+
+        return skipCount < 4;
+      },
+
+      registerSkip: () => {
+        const { plan, skipCount } = get();
+        if (plan === 'premium') return;
+        set({ skipCount: skipCount + 1 });
+      },
     }),
     {
       name: "SopaMusic-player-storage",
@@ -127,6 +229,11 @@ export const usePlayerStore = create<PlayerState>()(
         currentIndex: state.currentIndex,
         isRepeating: state.isRepeating,
         isShuffling: state.isShuffling,
+        skipCount: state.skipCount,
+        lastSkipReset: state.lastSkipReset,
+        plan: state.plan,
+        lastGenre: state.lastGenre,
+        recentlyPlayed: state.recentlyPlayed
       }),
     }
   )

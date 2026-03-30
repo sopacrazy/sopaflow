@@ -1,6 +1,10 @@
 import { Home, Search, Library, PlusSquare, Heart, Music2, X, Radio, Video, Users } from "lucide-react";
 import { cn } from "../utils/cn";
 import { usePlaylistStore } from "../store/usePlaylistStore";
+import { useAuth } from "../context/AuthContext";
+import { usePlayerStore } from "../store/usePlayerStore";
+import { LogOut, User as UserIcon } from "lucide-react";
+import { toast } from "sonner";
 
 interface SidebarProps {
   currentTab?: string;
@@ -9,16 +13,29 @@ interface SidebarProps {
 
 export function Sidebar({ currentTab = "home", onTabChange }: SidebarProps) {
   const { playlists, addPlaylist, removePlaylist } = usePlaylistStore();
+  const { user, signOut } = useAuth();
+  const { plan, resetHome } = usePlayerStore();
 
   const handleCreatePlaylist = () => {
+    if (plan !== 'premium') {
+      toast.error("Recurso Premium", {
+        description: "Assine o plano Premium para criar suas próprias playlists!",
+      });
+      return;
+    }
     const name = window.prompt("Nome da nova playlist:");
     if (name && name.trim().length > 0) {
       addPlaylist(name.trim());
     }
   };
 
+  const handleGoHome = () => {
+    resetHome();
+    onTabChange?.("home");
+  };
+
   return (
-    <aside className="hidden md:flex flex-col w-[260px] h-full bg-black border-r border-zinc-900 p-6 gap-8 shadow-[10px_0_40px_rgba(0,0,0,0.5)] z-10">
+    <aside className="hidden md:flex flex-col w-[260px] h-full bg-black border-r border-zinc-900 p-6 gap-8 shadow-[10px_0_40px_rgba(0,0,0,0.5)] z-10 relative">
       {/* Logo */}
       <div className="flex items-center gap-2 text-white">
         <span className="text-xl font-extrabold tracking-tight text-white uppercase">
@@ -32,7 +49,7 @@ export function Sidebar({ currentTab = "home", onTabChange }: SidebarProps) {
       {/* Navigation */}
       <nav className="flex flex-col gap-2">
         <button
-          onClick={() => onTabChange?.("home")}
+          onClick={handleGoHome}
           className={cn(
             "flex items-center gap-4 text-sm font-bold transition-all duration-200 px-4 py-3 rounded-xl",
             currentTab === "home" 
@@ -114,6 +131,38 @@ export function Sidebar({ currentTab = "home", onTabChange }: SidebarProps) {
              </button>
            </div>
         ))}
+      </div>
+
+      {/* User Profile & Logout */}
+      <div className="mt-auto pt-6 border-t border-zinc-900 flex flex-col gap-2">
+        <div className="flex items-center gap-3 px-2 mb-2 group">
+           <div className="w-10 h-10 rounded-full bg-zinc-800 border-2 border-green-500/0 group-hover:border-green-500/50 transition-all flex items-center justify-center overflow-hidden">
+              {user?.user_metadata?.avatar_url ? (
+                <img src={user.user_metadata.avatar_url} alt="User profile" className="w-full h-full object-cover" />
+              ) : (
+                <UserIcon className="w-5 h-5 text-zinc-500" />
+              )}
+           </div>
+           <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-white truncate capitalize">{user?.user_metadata?.full_name || user?.email?.split('@')[0] || "Usuário"}</p>
+              <div className="flex items-center gap-2 mt-0.5">
+                  <span className={cn(
+                    "text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border",
+                    plan === 'premium' ? "bg-green-500/10 text-green-500 border-green-500/20" : "bg-zinc-800 text-zinc-500 border-white/5"
+                  )}>
+                    Plano {plan}
+                  </span>
+               </div>
+           </div>
+        </div>
+        <button 
+          onClick={() => signOut()}
+          className="flex items-center gap-4 text-sm font-bold text-zinc-400 hover:text-rose-500 hover:bg-rose-500/10 transition-all duration-200 px-4 py-3 rounded-xl w-full text-left mt-2"
+          title="Sair da Conta"
+        >
+          <LogOut className="w-5 h-5" />
+          Sair
+        </button>
       </div>
     </aside>
   );

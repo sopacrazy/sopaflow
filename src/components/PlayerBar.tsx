@@ -8,6 +8,7 @@ import { VolumeControl } from "./VolumeControl";
 import { formatTime } from "../utils/formatTime";
 import { cn } from "../utils/cn";
 import axios from "axios";
+import { toast } from "sonner";
 
 export function PlayerBar() {
   const {
@@ -27,7 +28,10 @@ export function PlayerBar() {
     youtubeUrl,
     setYoutubeUrl,
     isLoadingAudio,
-    setLoadingAudio
+    setLoadingAudio,
+    plan,
+    canSkip,
+    registerSkip
   } = usePlayerStore();
   
   const { isFavorite, toggleFavorite } = useFavoritesStore();
@@ -77,6 +81,61 @@ export function PlayerBar() {
     findFullAudio();
   }, [currentTrack?.id]);
 
+  // Media Session API for mobile lock-screen and background controls
+  useEffect(() => {
+    if (!currentTrack || !('mediaSession' in navigator)) return;
+
+    // Update metadata
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: currentTrack.name,
+      artist: currentTrack.artist,
+      album: currentTrack.album || "SopaFlow",
+      artwork: [
+        { src: currentTrack.image || "", sizes: '96x96', type: 'image/jpeg' },
+        { src: currentTrack.image || "", sizes: '128x128', type: 'image/jpeg' },
+        { src: currentTrack.image || "", sizes: '192x192', type: 'image/jpeg' },
+        { src: currentTrack.image || "", sizes: '256x256', type: 'image/jpeg' },
+        { src: currentTrack.image || "", sizes: '384x384', type: 'image/jpeg' },
+        { src: currentTrack.image || "", sizes: '512x512', type: 'image/jpeg' },
+      ]
+    });
+
+    // Update playback state
+    navigator.mediaSession.playbackState = isPlaying ? "playing" : "paused";
+
+    // Set action handlers
+    navigator.mediaSession.setActionHandler('play', () => togglePlayPause());
+    navigator.mediaSession.setActionHandler('pause', () => togglePlayPause());
+    navigator.mediaSession.setActionHandler('previoustrack', () => prevTrack());
+    navigator.mediaSession.setActionHandler('nexttrack', () => {
+      if (canSkip()) {
+        registerSkip();
+        nextTrack();
+      } else {
+        toast.error("Limite de pulos atingido!");
+      }
+    });
+
+    // Seek handlers (Optional)
+    navigator.mediaSession.setActionHandler('seekto', (details) => {
+        if (details.seekTime !== undefined) handleSeek(details.seekTime);
+    });
+
+    // Update position state for the system progress bar
+    if ('setPositionState' in navigator.mediaSession) {
+        try {
+            navigator.mediaSession.setPositionState({
+                duration: duration || currentTrack.duration || 0,
+                playbackRate: isPlaying ? 1 : 0,
+                position: progress || 0,
+            });
+        } catch (e) {
+            // Silently fail if state is invalid
+        }
+    }
+
+  }, [currentTrack, isPlaying, youtubeUrl, canSkip, nextTrack, prevTrack, registerSkip, togglePlayPause, duration, progress]);
+
   if (!currentTrack) return null;
 
   const handleSeek = (time: number) => {
@@ -89,6 +148,17 @@ export function PlayerBar() {
   const handleOnProgress = (state: any) => {
     if (state.playedSeconds !== undefined) {
        setProgress(state.playedSeconds);
+       
+       // Limit to 1 minute for FREE users
+       if (plan === 'free' && state.playedSeconds >= 60) {
+         if (isPlaying) {
+            togglePlayPause();
+            toast.error("O plano Free permite ouvir apenas 1 minuto de cada música. Faça o upgrade para o Premium!", {
+              duration: 5000,
+              description: "Assine agora para ouvir músicas completas!"
+            });
+         }
+       }
     }
   };
 
@@ -160,7 +230,7 @@ export function PlayerBar() {
         </div>
       )}
 
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-[#121212] border-t border-zinc-900 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] sm:rounded-t-3xl px-4 sm:px-8 py-3 h-[72px] sm:h-[100px]">
+      <div className="fixed bottom-[80px] md:bottom-0 left-0 md:left-[260px] right-0 z-[60] bg-[#121212] border-t border-zinc-900 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] sm:rounded-tl-3xl px-4 sm:px-8 py-3 h-[72px] sm:h-[100px] mb-[env(safe-area-inset-bottom,0)]">
         <div className="max-w-screen-2xl mx-auto flex items-center justify-between gap-4 h-full">
         
         {/* Invisible Player - NOT using display:none because it can block audio/video playback */}
@@ -185,7 +255,7 @@ export function PlayerBar() {
                 height="100%"
                 config={{
                    youtube: {
-                      playerVars: { autoplay: 1, controls: 0, disablekb: 1 }
+                      playerVars: { autoplay: 0, controls: 0, disablekb: 1 }
                    }
                 }}
               />
@@ -225,19 +295,45 @@ export function PlayerBar() {
             </div>
           </div>
 
-          {/* Mobile Play/Pause (hidden on sm+) */}
-          <button
-              onClick={(e) => { e.stopPropagation(); togglePlayPause(); }}
-              className="sm:hidden w-10 h-10 flex items-center justify-center rounded-full text-black bg-[#20D760] shadow-[0_4px_10px_rgba(34,197,94,0.2)] active:scale-95 transition-transform"
-          >
-              {isLoadingAudio ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : isPlaying ? (
-                <Pause className="w-5 h-5 fill-current" />
-              ) : (
-                <Play className="w-5 h-5 fill-current ml-0.5" />
-              )}
-          </button>
+          {/* Mobile Player Controls (hidden on sm+) */}
+          <div className="sm:hidden flex items-center gap-3">
+            <button
+              onClick={(e) => { e.stopPropagation(); prevTrack(); }}
+              className="p-2 text-zinc-400 active:text-white transition-colors"
+            >
+              <SkipBack className="w-5 h-5 fill-current" />
+            </button>
+
+            <button
+                onClick={(e) => { e.stopPropagation(); togglePlayPause(); }}
+                className="w-10 h-10 flex items-center justify-center rounded-full text-black bg-[#20D760] shadow-[0_4px_10px_rgba(34,197,94,0.2)] active:scale-95 transition-transform"
+            >
+                {isLoadingAudio ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : isPlaying ? (
+                  <Pause className="w-5 h-5 fill-current" />
+                ) : (
+                  <Play className="w-5 h-5 fill-current ml-0.5" />
+                )}
+            </button>
+
+            <button
+              onClick={(e) => { 
+                e.stopPropagation();
+                if (canSkip()) {
+                  registerSkip();
+                  nextTrack();
+                } else {
+                  toast.error("Limite de pulos atingido!", {
+                    description: "Upgrade para Premium para pulos ilimitados!",
+                  });
+                }
+              }}
+              className="p-2 text-zinc-400 active:text-white transition-colors"
+            >
+              <SkipForward className="w-5 h-5 fill-current" />
+            </button>
+          </div>
         </div>
 
         {/* Controls */}
@@ -274,7 +370,16 @@ export function PlayerBar() {
             </button>
             
             <button
-              onClick={nextTrack}
+              onClick={() => {
+                if (canSkip()) {
+                  registerSkip();
+                  nextTrack();
+                } else {
+                  toast.error("Limite de pulos atingido!", {
+                    description: "Você pode pular 4 músicas por hora no plano Free. Upgrade para Premium para pulos ilimitados!",
+                  });
+                }
+              }}
               className="text-zinc-400 hover:text-white transition-colors"
             >
               <SkipForward className="w-6 h-6 fill-current" />

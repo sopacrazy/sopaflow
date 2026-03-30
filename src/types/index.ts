@@ -6,4 +6,5 @@ export interface Track {
   image: string; // We'll take the highest quality image
   audio: string; // We'll take the highest quality audio (320kbps)
   duration: number;
+  genre?: string;
 }
