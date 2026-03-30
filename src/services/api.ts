@@ -37,7 +37,7 @@ export const jamendoApi = {
       
       return results.map((track: any) => {
         // Use 300x300 cover instead of 600x600 to load much faster
-        const optimizedImage = track.artworkUrl100.replace("100x100bb.jpg", "600x600bb.jpg");
+        const optimizedImage = track.artworkUrl100.replace("100x100bb.jpg", "300x300bb.jpg");
         
         return {
           id: track.trackId.toString(),
@@ -56,14 +56,14 @@ export const jamendoApi = {
     }
   },
 
-  async searchArtistWithAlbums(artistName: string): Promise<{ artist: string, albums: any[] }> {
+  async searchArtistWithAlbums(artistName: string, maxResults = 10): Promise<{ artist: string, albums: any[] }> {
     try {
       const response = await axios.get(`https://itunes.apple.com/search`, {
         params: {
           term: artistName,
           media: "music",
           entity: "album",
-          limit: 10
+          limit: maxResults
         }
       });
       return {
@@ -93,7 +93,7 @@ export const jamendoApi = {
         name: track.trackName,
         artist: track.artistName,
         album: track.collectionName,
-        image: track.artworkUrl100.replace("100x100bb.jpg", "600x600bb.jpg"),
+        image: track.artworkUrl100.replace("100x100bb.jpg", "300x300bb.jpg"),
         audio: track.previewUrl,
         duration: Math.floor(track.trackTimeMillis / 1000) || 0,
         genre: track.primaryGenreName,

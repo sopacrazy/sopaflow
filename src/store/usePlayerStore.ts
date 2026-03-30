@@ -13,6 +13,7 @@ interface PlayerState {
   isShuffling: boolean;
   isLoadingAudio: boolean;
   youtubeUrl: string | null;
+  nextYoutubeUrl: string | null; // Pre-fetched URL for the next track
   lastGenre: string | null;
   recentlyPlayed: Track[];
   
@@ -31,7 +32,10 @@ interface PlayerState {
   toggleShuffle: () => void;
   setLoadingAudio: (loading: boolean) => void;
   setYoutubeUrl: (url: string | null) => void;
+  setNextYoutubeUrl: (url: string | null) => void;
   playAlbum: (albumTracks: Track[]) => void;
+  searchYoutube: (track: Track) => Promise<string | null>;
+  prefetchNextTrack: () => Promise<void>;
   
   // Navigation & Search (Moved here to allow global reset from Sidebar)
   searchQuery: string;
@@ -69,6 +73,7 @@ export const usePlayerStore = create<PlayerState>()(
       isShuffling: false,
       isLoadingAudio: false,
       youtubeUrl: null,
+      nextYoutubeUrl: null,
       lastGenre: null,
       recentlyPlayed: [],
       plan: 'free',
@@ -167,11 +172,16 @@ export const usePlayerStore = create<PlayerState>()(
           }
         }
 
+        // If we have a prefetched URL, use it immediately
+        const { nextYoutubeUrl } = get();
+        
         set({
           currentIndex: nextIndex,
           currentTrack: queue[nextIndex],
           isPlaying: true,
           progress: 0,
+          youtubeUrl: nextYoutubeUrl, // Use prefetched URL
+          nextYoutubeUrl: null // Reset prefetch
         });
       },
 
@@ -198,7 +208,48 @@ export const usePlayerStore = create<PlayerState>()(
       toggleShuffle: () => set((state) => ({ isShuffling: !state.isShuffling })),
       setLoadingAudio: (loading) => set({ isLoadingAudio: loading }),
       setYoutubeUrl: (url) => set({ youtubeUrl: url }),
+      setNextYoutubeUrl: (url) => set({ nextYoutubeUrl: url }),
       setLastGenre: (genre) => set({ lastGenre: genre }),
+
+      searchYoutube: async (track: Track) => {
+        try {
+          const query = `${track.name} ${track.artist} official audio`;
+          const isDev = import.meta.env.MODE === 'development';
+          const apiUrl = isDev ? 'http://localhost:3001' : '';
+          
+          const response = await fetch(`${apiUrl}/api/search-youtube?q=${encodeURIComponent(query)}`);
+          const data = await response.json();
+          
+          if (data.url) return data.url;
+          return track.audio || null;
+        } catch (error) {
+          console.error("Search failed:", error);
+          return track.audio || null;
+        }
+      },
+
+      prefetchNextTrack: async () => {
+        const state = get();
+        const { queue, currentIndex, isShuffling, isRepeating } = state;
+        if (queue.length === 0) return;
+
+        let nextIndex = currentIndex + 1;
+        if (isShuffling && queue.length > 1) {
+          nextIndex = Math.floor(Math.random() * queue.length);
+          while (nextIndex === currentIndex) {
+            nextIndex = Math.floor(Math.random() * queue.length);
+          }
+        } else if (nextIndex >= queue.length) {
+          if (isRepeating) nextIndex = 0;
+          else return;
+        }
+
+        const nextTrack = queue[nextIndex];
+        if (!nextTrack) return;
+
+        const nextUrl = await state.searchYoutube(nextTrack);
+        set({ nextYoutubeUrl: nextUrl });
+      },
 
       playAlbum: (tracks) => {
         if (!tracks || tracks.length === 0) return;

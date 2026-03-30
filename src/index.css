@@ -33,6 +33,21 @@
   .neon-border {
     @apply border-green-500/50 shadow-[0_0_15px_rgba(34,197,94,0.2)];
   }
+
+  .font-brand {
+    font-family: 'Permanent Marker', cursive;
+    @apply tracking-wider italic;
+    transform: skewX(-5deg);
+    text-shadow: 2px 2px 0px rgba(0,0,0,0.5);
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }
 
 .animate-in {

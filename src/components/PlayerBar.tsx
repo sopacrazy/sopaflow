@@ -7,7 +7,6 @@ import { ProgressBar } from "./ProgressBar";
 import { VolumeControl } from "./VolumeControl";
 import { formatTime } from "../utils/formatTime";
 import { cn } from "../utils/cn";
-import axios from "axios";
 import { toast } from "sonner";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
@@ -33,7 +32,9 @@ export function PlayerBar() {
     setLoadingAudio,
     plan,
     canSkip,
-    registerSkip
+    registerSkip,
+    searchYoutube,
+    prefetchNextTrack,
   } = usePlayerStore();
   
   const { user } = useAuth();
@@ -44,45 +45,25 @@ export function PlayerBar() {
   const [duration, setDuration] = useState(0);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Search for the full YouTube song when the track changes
+  // Handle track changes and loading
   useEffect(() => {
     if (!currentTrack) return;
 
-    const findFullAudio = async () => {
-      setLoadingAudio(true);
-      setYoutubeUrl(null); // Clear the player so it doesn't play old track or trigger early
-
-      try {
-        const query = `${currentTrack.name} ${currentTrack.artist} official audio`;
-        console.log("SEARCHING:", query);
-        
-        // Use relative /api endpoint in production (Vercel) and localhost:3001 in development
-        const env = (import.meta as any).env;
-        const apiUrl = env?.MODE === 'development' ? 'http://localhost:3001' : '';
-        const response = await axios.get(`${apiUrl}/api/search-youtube`, {
-          params: { q: query },
-          timeout: 10000 
-        });
-        
-        if (response.data.url) {
-          console.log("FULL AUDIO FOUND:", response.data.url);
-          setYoutubeUrl(response.data.url);
-          if (response.data.duration) setDuration(response.data.duration);
-        } else {
-          console.warn("Using fallback audio (No URL found on YouTube)");
-          setYoutubeUrl(currentTrack.audio);
-          setDuration(30);
-        }
-      } catch (err) {
-        console.warn("Using fallback audio (Server might be off)");
-        setYoutubeUrl(currentTrack.audio);
-        setDuration(30);
-      } finally {
+    // If we don't have a URL yet (not prefetched), find one
+    if (!youtubeUrl) {
+      const loadTrack = async () => {
+        setLoadingAudio(true);
+        const url = await searchYoutube(currentTrack);
+        setYoutubeUrl(url);
         setLoadingAudio(false);
-      }
-    };
-
-    findFullAudio();
+        // After loading current, prefetch next
+        prefetchNextTrack();
+      };
+      loadTrack();
+    } else {
+      // If we already had it (prefetch), just prefetch the NEXT one
+      prefetchNextTrack();
+    }
   }, [currentTrack?.id]);
 
   // Media Session API for mobile lock-screen and background controls
@@ -262,7 +243,7 @@ export function PlayerBar() {
           className="fixed opacity-1 pointer-events-none" 
           style={{ width: '1px', height: '1px', zIndex: -50, top: 0, left: 0 }}
         >
-           {youtubeUrl && (
+            {youtubeUrl && (
               <Player
                 ref={playerRef}
                 url={youtubeUrl}
@@ -271,10 +252,14 @@ export function PlayerBar() {
                 onProgress={handleOnProgress}
                 onDuration={(d: number) => setDuration(d)}
                 onEnded={() => nextTrack()}
-                onError={(e: any) => console.error("Player error:", e)}
-                onReady={() => console.log("Player is ready to play", youtubeUrl)}
-                onPlay={() => console.log("Player started playing")}
-                onPause={() => console.log("Player paused")}
+                onError={(e: any) => {
+                  console.error("Player error:", e);
+                  // Try to recover by skipping to next track if it fails multiple times or is a fatal error
+                  if (isPlaying) {
+                    setTimeout(() => nextTrack(), 2000);
+                  }
+                }}
+                onReady={() => console.log("Player is ready")}
                 width="100%"
                 height="100%"
                 config={{
@@ -290,7 +275,14 @@ export function PlayerBar() {
                    }
                 }}
               />
-           )}
+            )}
+            {/* Background keep-alive (silence loop) to prevent throttling */}
+            <audio 
+              src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA" 
+              loop 
+              autoPlay 
+              muted={!isPlaying}
+            />
         </div>
 
         {/* Track Info */}

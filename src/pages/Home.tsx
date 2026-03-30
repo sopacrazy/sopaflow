@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { SearchBar } from "../components/SearchBar";
 import { TrackGrid } from "../components/TrackGrid";
 import { TrackCard } from "../components/TrackCard";
@@ -17,6 +17,8 @@ const CATEGORIES = [
   { label: "Lo-fi", query: "Lofi Beats", image: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&q=80", bgClass: "bg-gradient-to-br from-[#311B92] to-[#1A237E]" },
   { label: "Piano", query: "Piano Relax", image: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=400&q=80", bgClass: "bg-gradient-to-br from-[#004D40] to-[#006064]" },
   { label: "Indie", query: "Indie Hits", image: "https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=300&q=80", bgClass: "bg-gradient-to-br from-[#BF360C] to-[#3E2723]" },
+  { label: "Jazz", query: "Jazz Hits", image: "https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=400&q=80" },
+  { label: "Soul", query: "Soul Classics", image: "https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=300&q=80" },
 ];
 
 const FEATURED_PLAYLISTS = [
@@ -26,11 +28,59 @@ const FEATURED_PLAYLISTS = [
   { title: "Jazz de Elite", query: "Smooth Jazz Collection", image: "https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=400&q=80" },
 ];
 
+const HOME_FILTERS = [
+  "Podcasts", "Relax", "Energia", "Romance", "Para treinar", "Para ouvir no trânsito", "Festa", "Positividade", "Foco", "Triste", "Para dormi"
+];
+
+// Top 36 always loaded first - the legends
+const ROCK_TOP = [
+  "AC/DC", "Queen", "Nirvana", "Guns N' Roses", "Pink Floyd", "Led Zeppelin", 
+  "Metallica", "Iron Maiden", "Black Sabbath", "The Rolling Stones", "The Beatles", 
+  "Aerosmith", "Foo Fighters", "Red Hot Chili Peppers", "Linkin Park", "Bon Jovi", 
+  "Pearl Jam", "Deep Purple", "KISS", "Scorpions", "Oasis", "Green Day",
+  "System of a Down", "Slipknot", "Avenged Sevenfold", "Muse", "The Who",
+  "Def Leppard", "Jimi Hendrix", "The Doors", "Radiohead", "Arctic Monkeys",
+  "The Strokes", "The Killers", "Evanescence", "Paramore"
+];
+
+// Extended list - loaded progressively via infinite scroll
+const ROCK_EXTENDED = [
+  "Rage Against the Machine", "Alice in Chains", "Soundgarden", "Stone Temple Pilots",
+  "The Smashing Pumpkins", "Nine Inch Nails", "Marilyn Manson", "Rob Zombie",
+  "Pantera", "Megadeth", "Anthrax", "Sepultura",
+  "Motorhead", "Twisted Sister", "Whitesnake", "Warrant",
+  "Poison", "Cinderella", "Quiet Riot", "Night Ranger",
+  "Ozzy Osbourne", "Dio", "Rainbow", "Uriah Heep",
+  "Status Quo", "Thin Lizzy", "Wishbone Ash", "Free",
+  "Bad Company", "Foreigner", "Journey", "Styx",
+  "Boston", "Kansas", "REO Speedwagon", "Asia",
+  "Supertramp", "Fleetwood Mac", "Heart", "Pat Benatar",
+  "Blondie", "The Pretenders", "The Clash", "The Ramones",
+  "Sex Pistols", "The Cure", "The Smiths", "Joy Division",
+  "New Order", "Depeche Mode", "The Police", "Talking Heads",
+  "R.E.M.", "U2", "Coldplay", "Travis",
+  "Snow Patrol", "Kaiser Chiefs", "Franz Ferdinand", "Interpol",
+  "White Stripes", "Wolfmother", "Queens of the Stone Age", "Them Crooked Vultures",
+  "Audioslave", "Temple of the Dog", "Mad Season", "Blind Melon",
+  "Dinosaur Jr", "Pixies", "Sonic Youth", "Mudhoney"
+];
+
+const ROCK_LEGENDS = [...ROCK_TOP, ...ROCK_EXTENDED]; // keep for mix function
+
+
 export function Home() {
   const [topBrasil, setTopBrasil] = useState<Track[]>([]);
   const [topInternacional, setTopInternacional] = useState<Track[]>([]);
+  const [rockClassics, setRockClassics] = useState<Track[]>([]);
+  const [rockAnthems, setRockAnthems] = useState<Track[]>([]);
   const [recommendations, setRecommendations] = useState<Track[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const rockExtendedPageRef = useRef(0); // tracks how many batches of ROCK_EXTENDED loaded
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const isRockModeRef = useRef(false);
+  const isLoadingMoreRef = useRef(false);
+  const observerRef = useRef<IntersectionObserver | null>(null);
   
   const { 
     recentlyPlayed, lastGenre, setLastGenre, 
@@ -46,14 +96,18 @@ export function Home() {
   const fetchHomeData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [brasil, inter, recs] = await Promise.all([
+      const [brasil, inter, rockClas, rockAnth, recs] = await Promise.all([
         jamendoApi.searchTracks("Top Brasil Hits 2024", 6, true),
         jamendoApi.searchTracks("Top Global Hits 2024", 6, true),
-        jamendoApi.searchTracks(lastGenre || "Top Trending Hits", 8, true)
+        jamendoApi.searchTracks("Pink Floyd Nirvana Iron Maiden Deep Purple Black Sabbath legendary rock albums", 12, true),
+        jamendoApi.searchTracks("Stairway to Heaven Smells Like Teen Spirit Enter Sandman rock anthems", 12, true),
+        jamendoApi.searchTracks(lastGenre || "Top Trending Hits", 12, true)
       ]);
       
       setTopBrasil(brasil);
       setTopInternacional(inter);
+      setRockClassics(rockClas);
+      setRockAnthems(rockAnth);
       setRecommendations(recs);
     } catch (error) {
       console.error("Failed to load home data", error);
@@ -67,18 +121,52 @@ export function Home() {
       setSearchResults([]);
       setArtistAlbums([]);
       setIsSearching(false);
+      isRockModeRef.current = false;
       return;
     }
+    
     setIsLoading(true);
     setIsSearching(true);
     setSelectedAlbum(null);
+
+    const isRock = query.toLowerCase().includes('rock') || 
+                   query.toLowerCase().includes('queen') || 
+                   query.toLowerCase().includes('ac/dc') || 
+                   query.toLowerCase().includes('nirvana');
+
     try {
-      const [tracks, albumData] = await Promise.all([
-        jamendoApi.searchTracks(query),
-        jamendoApi.searchArtistWithAlbums(query)
-      ]);
-      setSearchResults(tracks);
-      setArtistAlbums(albumData.albums);
+      if (isRock) {
+        // Always use ROCK_TOP (36 icons) for the initial load
+        const rockSubset = jamendoApi.shuffle([...ROCK_TOP]).slice(0, 36);
+        isRockModeRef.current = true;
+        rockExtendedPageRef.current = 0;
+        const [tracks, anthems, ...legendResults] = await Promise.all([
+          jamendoApi.searchTracks(query, 20),
+          jamendoApi.searchTracks("Rock Anthems Classics 70s 80s 90s", 15, true),
+          ...rockSubset.map(band => jamendoApi.searchArtistWithAlbums(band, 1))
+        ]);
+
+        // Take the first album from each legend result to represent the artist
+        const legendAlbums = legendResults
+            .map(res => res.albums[0])
+            .filter(Boolean);
+
+        setSearchResults([...tracks, ...anthems].slice(0, 40));
+        
+        // Remove duplicates and combine
+        const uniqueAlbums = legendAlbums.filter((v, i, a) => 
+            a.findIndex(t => t.artistName === v.artistName) === i
+        );
+        
+        setArtistAlbums(uniqueAlbums);
+      } else {
+        const [tracks, albumData] = await Promise.all([
+          jamendoApi.searchTracks(query),
+          jamendoApi.searchArtistWithAlbums(query)
+        ]);
+        setSearchResults(tracks);
+        setArtistAlbums(albumData.albums);
+      }
     } catch (error) {
       toast.error("Erro ao buscar conteúdo.");
     } finally {
@@ -86,6 +174,39 @@ export function Home() {
     }
   }, []);
 
+  // Load more rock bands when user scrolls to bottom
+  const loadMoreRockBands = useCallback(async () => {
+    if (isLoadingMoreRef.current) return;
+    const batchSize = 12;
+    const page = rockExtendedPageRef.current;
+    const batch = ROCK_EXTENDED.slice(page * batchSize, (page + 1) * batchSize);
+    if (batch.length === 0) return; // all loaded
+
+    isLoadingMoreRef.current = true;
+    setIsLoadingMore(true);
+    try {
+      const results = await Promise.all(batch.map(band => jamendoApi.searchArtistWithAlbums(band, 1)));
+      const newAlbums = results
+        .map(r => r.albums[0])
+        .filter(Boolean)
+        .filter((v: any, i: number, a: any[]) => a.findIndex((t: any) => t.artistName === v.artistName) === i);
+
+      if (newAlbums.length > 0) {
+        const current = usePlayerStore.getState().artistAlbums;
+        const merged = [
+          ...current,
+          ...newAlbums.filter((na: any) => !current.some((p: any) => p.artistName === na.artistName))
+        ];
+        setArtistAlbums(merged);
+      }
+      rockExtendedPageRef.current = page + 1;
+    } catch (e) {
+      console.error("loadMoreRockBands error:", e);
+    } finally {
+      isLoadingMoreRef.current = false;
+      setIsLoadingMore(false);
+    }
+  }, [setArtistAlbums]);
   const viewAlbum = async (album: any) => {
     setIsLoading(true);
     setSelectedAlbum(album);
@@ -135,6 +256,49 @@ export function Home() {
     }
   };
 
+  const handlePlayMix = async () => {
+    toast.loading("Carregando todas as faixas...", { id: 'mix' });
+    try {
+      // Fetch ALL tracks from ALL albums - no limits!
+      const allAlbums = [...artistAlbums];
+      const trackPromises = allAlbums.map(album => jamendoApi.getAlbumTracks(album.collectionId.toString()));
+      const results = await Promise.all(trackPromises);
+
+      // Group tracks by artist
+      const byArtist: Record<string, Track[]> = {};
+      results.filter(Boolean).forEach(albumTracks => {
+        albumTracks.forEach(track => {
+          if (!byArtist[track.artist]) byArtist[track.artist] = [];
+          byArtist[track.artist].push(track);
+        });
+      });
+
+      // Shuffle tracks within each artist and shuffle artist order
+      const artistKeys = jamendoApi.shuffle(Object.keys(byArtist));
+      const artistQueues = artistKeys.map(a => jamendoApi.shuffle(byArtist[a]));
+
+      // Interleave: pick 1 track at a time from each artist in rotation
+      // e.g: AC/DC, Nirvana, Queen, Metallica, AC/DC, Nirvana, ...
+      const interleaved: Track[] = [];
+      const maxLen = Math.max(...artistQueues.map(a => a.length));
+      for (let i = 0; i < maxLen; i++) {
+        artistQueues.forEach(queue => {
+          if (queue[i]) interleaved.push(queue[i]);
+        });
+      }
+
+      if (interleaved.length > 0) {
+        playAlbum(interleaved);
+        toast.success(`${interleaved.length} faixas de ${artistKeys.length} artistas! Tocando até acabar 🔥`, { id: 'mix' });
+      } else {
+        toast.error("Nenhuma faixa encontrada.", { id: 'mix' });
+      }
+    } catch (e) {
+      toast.error("Erro ao iniciar mix.", { id: 'mix' });
+      console.error("Play mix error:", e);
+    }
+  };
+
   useEffect(() => {
     if (searchQuery) {
       handleSearch(searchQuery);
@@ -142,6 +306,28 @@ export function Home() {
       fetchHomeData();
     }
   }, [searchQuery, fetchHomeData, handleSearch]);
+
+  // Callback ref for sentinel: attach IntersectionObserver when the element mounts
+  const sentinelCallbackRef = useCallback((node: HTMLDivElement | null) => {
+    // Disconnect old observer
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+      observerRef.current = null;
+    }
+    sentinelRef.current = node;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && isRockModeRef.current && !isLoadingMoreRef.current) {
+          loadMoreRockBands();
+        }
+      },
+      { rootMargin: '300px' }
+    );
+    observer.observe(node);
+    observerRef.current = observer;
+  }, [loadMoreRockBands]);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -177,49 +363,81 @@ export function Home() {
           </div>
 
           {!selectedAlbum && artistAlbums.length > 0 && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-               {/* Top Result Artist Card Style */}
-               <div className="space-y-4">
-                  <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest pl-2">Melhor Resultado</h3>
-                  <div className="group relative p-6 sm:p-8 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-zinc-800/50 to-zinc-900 border border-white/5 shadow-2xl overflow-hidden cursor-pointer">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/10 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2" />
-                    <div className="flex flex-row sm:flex-col gap-4 sm:gap-6 items-center sm:items-start">
-                        <div className="w-20 h-20 sm:w-32 sm:h-32 rounded-full overflow-hidden shadow-2xl border-2 border-white/10 flex-shrink-0">
-                            <img src={artistAlbums[0].artworkUrl100.replace("100x100bb.jpg", "600x600bb.jpg")} className="w-full h-full object-cover" alt={artistAlbums[0].artistName} />
-                        </div>
-                        <div className="space-y-1 overflow-hidden">
-                            <h4 className="text-xl sm:text-4xl font-black text-white truncate">{artistAlbums[0].artistName}</h4>
-                            <p className="text-green-500 font-bold uppercase text-[8px] sm:text-[10px] tracking-widest">Artista</p>
-                        </div>
-                    </div>
+            <div className="flex flex-col gap-10">
+               {/* Premium Vitrine Header */}
+               <div className="relative overflow-hidden rounded-[2rem] sm:rounded-[3rem] bg-gradient-to-br from-zinc-900 to-black border border-white/5 p-6 sm:p-10 mb-2">
+                  <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-purple-500/10 to-transparent pointer-events-none" />
+                  <div className="relative z-10 space-y-4">
+                     <span className="text-xs font-black text-purple-500 uppercase tracking-[0.3em]">Vitrine de Lendas</span>
+                     <h3 className="text-3xl sm:text-5xl font-black text-white tracking-tighter">
+                        {searchQuery.toLowerCase().includes('rock') ? 'O Melhor do Rock' : `Explorar: ${searchQuery}`}
+                     </h3>
+                     <p className="text-sm sm:text-lg text-zinc-400 font-medium max-w-xl">
+                        Descubra álbuns icônicos, as bandas mais influentes e os hits que definiram gerações. Tudo em um só lugar.
+                     </p>
                   </div>
                </div>
 
-               {/* Top Songs as List */}
-               <div className="space-y-4">
-                  <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest pl-2">Top Músicas</h3>
-                  <div className="space-y-1 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
-                    {isLoading ? <LoadingState /> : searchResults.slice(0, 5).map((track, i) => (
-                      <div 
-                        key={track.id} 
-                        onClick={() => playTrack(track, searchResults)}
-                        className="group flex items-center gap-3 sm:gap-4 p-2 rounded-xl hover:bg-white/5 transition-all cursor-pointer border border-transparent hover:border-white/5"
-                      >
-                         <div className="relative w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0">
-                            <img src={track.image} className="w-full h-full object-cover rounded-md" alt={track.name} />
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-md">
-                               <Play className="w-4 h-4 text-white fill-current" />
+               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start px-2 sm:px-0">
+                  {/* Top Artists Row */}
+                  <div className="space-y-6">
+                     <div className="flex items-center justify-between">
+                        <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest pl-2">Artistas em Destaque</h3>
+                        <div className="h-px flex-1 bg-white/5 ml-4" />
+                     </div>
+                     <div className="flex gap-6 overflow-x-auto no-scrollbar pb-6 pr-4">
+                       {artistAlbums.slice(0, 40).map((artist, idx) => (
+                         <div 
+                           key={`${artist.artistId || artist.collectionId}-${idx}`} 
+                           onClick={() => viewAlbum(artist)}
+                           className="flex-shrink-0 w-32 sm:w-44 flex flex-col items-center gap-4 group cursor-pointer"
+                         >
+                            <div className="w-24 h-24 sm:w-40 sm:h-40 rounded-full overflow-hidden shadow-2xl border border-white/10 relative ring-4 ring-transparent group-hover:ring-purple-500/20 transition-all">
+                                <img loading="lazy" src={artist.artworkUrl100.replace("100x100bb.jpg", "200x200bb.jpg")} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={artist.artistName} />
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                   <div className="w-12 h-12 rounded-full bg-white text-black flex items-center justify-center">
+                                      <Play className="w-6 h-6 fill-current" />
+                                   </div>
+                                </div>
+                            </div>
+                            <div className="text-center space-y-1">
+                                <p className="text-sm sm:text-base font-bold text-white truncate w-full px-2">{artist.artistName}</p>
+                                <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest">Lenda</p>
                             </div>
                          </div>
-                         <div className="flex-1 min-w-0 pr-4">
-                            <p className="text-sm font-bold text-white truncate">{track.name}</p>
-                            <p className="text-[10px] sm:text-xs text-zinc-400 font-semibold">{track.artist}</p>
+                       ))}
+                     </div>
+                  </div>
+
+                  {/* Top Songs as List */}
+                  <div className="space-y-6">
+                     <div className="flex items-center justify-between">
+                        <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest pl-2">Maiores Hits</h3>
+                        <div className="h-px flex-1 bg-white/5 ml-4" />
+                     </div>
+                     <div className="space-y-2 bg-zinc-900/40 rounded-3xl p-4 border border-white/5">
+                       {isLoading ? <LoadingState /> : searchResults.slice(0, 8).map((track, i) => (
+                         <div 
+                           key={track.id} 
+                           onClick={() => playTrack(track, searchResults)}
+                           className="group flex items-center gap-4 p-3 rounded-2xl hover:bg-white/5 transition-all cursor-pointer"
+                         >
+                            <div className="relative w-12 h-12 flex-shrink-0">
+                               <img src={track.image} className="w-full h-full object-cover rounded-xl shadow-lg" alt={track.name} />
+                               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-xl">
+                                  <Play className="w-5 h-5 text-white fill-current" />
+                               </div>
+                            </div>
+                            <div className="flex-1 min-w-0 pr-4">
+                               <p className="text-sm sm:text-base font-bold text-white truncate">{track.name}</p>
+                               <p className="text-xs text-zinc-400 font-semibold">{track.artist}</p>
+                            </div>
+                            <div className="text-purple-500 text-xs font-black px-3 py-1 bg-purple-500/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                                0{i+1}
+                            </div>
                          </div>
-                         <div className="text-zinc-500 text-[10px] font-mono pr-2 opacity-50">
-                             0{i+1}
-                         </div>
-                      </div>
-                    ))}
+                       ))}
+                     </div>
                   </div>
                </div>
             </div>
@@ -230,7 +448,7 @@ export function Home() {
             <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 pt-2 sm:pt-4 px-2 sm:px-0">
                 <div className="w-full lg:w-80 flex-shrink-0 flex sm:flex-col gap-6 sm:gap-8 items-center sm:items-start">
                     <div className="w-32 h-32 sm:w-full aspect-square rounded-xl sm:rounded-2xl overflow-hidden shadow-3xl bg-zinc-800 group relative flex-shrink-0">
-                        <img src={selectedAlbum.artworkUrl100.replace("100x100bb.jpg", "800x800bb.jpg")} className="w-full h-full object-cover" alt={selectedAlbum.collectionName} />
+                        <img src={selectedAlbum.artworkUrl100.replace("100x100bb.jpg", "600x600bb.jpg")} className="w-full h-full object-cover" alt={selectedAlbum.collectionName} />
                         <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
                     </div>
                     <div className="flex-1 space-y-2 sm:space-y-3">
@@ -274,34 +492,65 @@ export function Home() {
             </div>
           )}
 
-          {/* Artist Albums Section */}
+          {/* Full Grid of Albums found in Search/Category */}
           {!selectedAlbum && artistAlbums.length > 0 && (
-            <div className="space-y-6 pt-10 border-t border-white/5 px-2 sm:px-0">
-              <h3 className="text-xl sm:text-2xl font-black text-white">Mais de {artistAlbums[0].artistName}</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-4 sm:gap-6">
-                {artistAlbums.map((album: any) => (
+            <div className="space-y-8 pt-12 border-t border-white/5 px-2 sm:px-0">
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                <div className="space-y-1">
+                   <h3 className="text-2xl sm:text-3xl font-black text-white">Discografia e Clássicos</h3>
+                   <p className="text-zinc-500 text-sm font-bold">Baseado na sua busca por "{searchQuery}"</p>
+                </div>
+                <div className="flex gap-2 items-center">
+                   <button 
+                     onClick={handlePlayMix}
+                     className="px-6 py-2 rounded-full bg-purple-500 hover:bg-purple-400 text-white font-black uppercase text-xs tracking-widest flex items-center gap-2 transition-all shadow-lg shadow-purple-500/20 active:scale-95"
+                   >
+                      <Play className="w-4 h-4 fill-current" /> Mix Aleatório
+                   </button>
+                   <div className="px-4 py-2 rounded-full bg-zinc-800 text-[10px] font-black text-white uppercase tracking-widest border border-white/5 hidden sm:block">Populares</div>
+                   <div className="px-4 py-2 rounded-full bg-purple-500/20 text-[10px] font-black text-purple-400 uppercase tracking-widest border border-purple-500/30 hidden sm:block">Essenciais</div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 sm:gap-8">
+                {artistAlbums.map((album: any, idx: number) => (
                   <div 
-                    key={album.collectionId} 
-                    className="group relative flex flex-col gap-2 p-3 sm:p-4 rounded-2xl sm:rounded-3xl bg-zinc-900/40 hover:bg-zinc-800 transition-all cursor-pointer shadow-lg border border-white/5"
+                    key={`${album.collectionId}-${idx}`} 
+                    className="group relative flex flex-col gap-3 p-4 rounded-[2rem] bg-zinc-900/40 hover:bg-zinc-800 transition-all cursor-pointer shadow-lg border border-white/5 hover:border-purple-500/20"
                     onClick={() => viewAlbum(album)}
                   >
-                    <div className="aspect-square rounded-xl sm:rounded-2xl overflow-hidden bg-zinc-800 shadow-2xl relative">
-                      <img src={album.artworkUrl100.replace("100x100bb.jpg", "600x600bb.jpg")} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt={album.collectionName} />
+                    <div className="aspect-square rounded-[1.5rem] overflow-hidden bg-zinc-800 shadow-2xl relative">
+                      <img loading="lazy" src={album.artworkUrl100.replace("100x100bb.jpg", "200x200bb.jpg")} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt={album.collectionName} />
                       <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
                       
                       <div 
                         onClick={(e) => handlePlayAlbum(e, album)}
-                        className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-green-500 text-black flex items-center justify-center shadow-2xl transform translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all shadow-green-500/20"
+                        className="absolute bottom-4 right-4 w-12 h-12 rounded-full bg-purple-500 text-white flex items-center justify-center shadow-2xl transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all shadow-purple-500/40"
                       >
-                         <Play className="w-4 h-4 sm:w-5 sm:h-5 fill-current ml-0.5" />
+                         <Play className="w-5 h-5 fill-current ml-1" />
                       </div>
                     </div>
-                    <div className="px-1 py-1">
-                        <p className="text-xs sm:text-sm font-extrabold text-white truncate leading-tight mb-0.5">{album.collectionName}</p>
-                        <p className="text-[8px] sm:text-[10px] text-zinc-500 font-black uppercase tracking-widest">{new Date(album.releaseDate).getFullYear()}</p>
+                    <div className="px-1 py-1 space-y-1">
+                        <p className="text-sm font-black text-white truncate leading-tight group-hover:text-purple-400 transition-colors">{album.collectionName}</p>
+                        <p className="text-[11px] text-zinc-500 font-bold truncate">{album.artistName}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-[9px] text-zinc-600 font-black uppercase tracking-widest">{new Date(album.releaseDate).getFullYear()}</span>
+                          <span className="w-1 h-1 rounded-full bg-zinc-800" />
+                          <span className="text-[9px] text-zinc-600 font-black uppercase tracking-widest">{album.primaryGenreName}</span>
+                        </div>
                     </div>
                   </div>
                 ))}
+              </div>
+
+              {/* Sentinel for infinite scroll */}
+              <div ref={sentinelCallbackRef} className="w-full py-6 flex justify-center">
+                {isLoadingMore && (
+                  <div className="flex items-center gap-3 text-zinc-500">
+                    <div className="w-5 h-5 rounded-full border-2 border-purple-500 border-t-transparent animate-spin" />
+                    <span className="text-xs font-bold uppercase tracking-widest">Carregando mais bandas...</span>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -311,33 +560,58 @@ export function Home() {
   }
 
   return (
-    <div className="flex flex-col gap-8 sm:gap-12 animate-in pt-4 sm:pt-8 pb-32">
+    <div className="flex flex-col gap-6 sm:gap-10 animate-in pt-4 sm:pt-6 pb-32">
+      {/* YT Music Style Filter Chips */}
+      <div className="flex items-center gap-3 overflow-x-auto pb-4 no-scrollbar pr-4">
+        {HOME_FILTERS.map((filter) => (
+          <button
+            key={filter}
+            onClick={() => onCategoryClick(filter)}
+            className="px-4 py-1.5 rounded-lg bg-zinc-900/50 border border-zinc-800 text-sm font-medium text-white whitespace-nowrap hover:bg-zinc-800 transition-colors"
+          >
+            {filter}
+          </button>
+        ))}
+      </div>
+
       {/* Header & Categories */}
       <section className="space-y-6 sm:space-y-8">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-6 px-2 sm:px-0 text-center sm:text-left">
-          <h1 className="text-3xl sm:text-5xl font-black text-white leading-none tracking-tighter">
-            {getGreeting()}
-          </h1>
-          <div className="w-full sm:w-auto">
-             <SearchBar onSearch={setSearchQuery} />
+        <div className="flex flex-col gap-4 px-2 sm:px-0">
+          <div className="flex items-center gap-4">
+             <div className="w-12 h-12 rounded-full overflow-hidden border border-white/10 hidden sm:block">
+                 <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&q=80" alt="Profile" className="w-full h-full object-cover" />
+             </div>
+             <div className="flex flex-col">
+                <span className="text-zinc-500 text-xs font-bold uppercase tracking-widest">{localStorage.getItem('sb-scvrmvuxzixidghstxqu-auth-token') ? 'ADRIANO MARTINS' : 'OUVINTE'}</span>
+                <h1 className="text-4xl sm:text-6xl font-black text-white leading-none tracking-tighter">
+                    {getGreeting() === "Bom dia" ? "Ouvir de novo" : getGreeting()}
+                </h1>
+             </div>
           </div>
         </div>
+
+        <div className="absolute top-4 sm:top-6 right-6 z-20 hidden lg:block">
+           <SearchBar onSearch={setSearchQuery} />
+        </div>
         
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4 px-1 sm:px-0">
-          {CATEGORIES.slice(0, 6).map((cat) => (
+        <div className="flex items-center gap-6 overflow-x-auto pb-6 no-scrollbar snap-x px-1 sm:px-0 scroll-smooth">
+          {CATEGORIES.map((cat) => (
             <div
               key={cat.label}
               onClick={() => onCategoryClick(cat.query)}
-              className={`flex items-center gap-2 sm:gap-4 transition-all rounded-xl sm:rounded-2xl overflow-hidden cursor-pointer group shadow-xl hover:shadow-2xl active:scale-[0.98] ${cat.bgClass} relative`}
+              className="flex-shrink-0 w-[140px] sm:w-[180px] group flex flex-col items-center gap-3 transition-all cursor-pointer snap-start"
             >
-              <div className="relative w-12 h-12 sm:w-20 sm:h-20 bg-black/30 flex-shrink-0 group-hover:shadow-[0_0_20px_rgba(255,255,255,0.1)] transition-all">
-                 <img src={cat.image} alt={cat.label} className="w-full h-full object-cover rounded-lg m-1 opacity-90 group-hover:opacity-100 transition-all group-hover:scale-110" style={{ width: 'calc(100% - 8px)', height: 'calc(100% - 8px)' }} />
+              <div className="relative w-full aspect-square bg-zinc-900 rounded-full overflow-hidden border border-white/5 shadow-2xl group-hover:scale-105 transition-all duration-500">
+                 <img src={cat.image} alt={cat.label} className="w-full h-full object-cover group-hover:opacity-80 transition-opacity" />
+                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                    <div className="w-12 h-12 rounded-full bg-white text-black flex items-center justify-center shadow-2xl scale-75 group-hover:scale-100 transition-transform">
+                        <Play className="w-6 h-6 fill-current ml-1" />
+                    </div>
+                 </div>
               </div>
-              <span className="font-black text-xs sm:text-lg text-white truncate z-10 px-1 sm:px-2">{cat.label}</span>
-              <div className="ml-auto mr-2 sm:mr-4 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0 hidden sm:block">
-                <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-white text-black shadow-2xl flex items-center justify-center">
-                  <Play className="w-4 h-4 sm:w-6 sm:h-6 fill-current ml-1" />
-                </div>
+              <div className="flex flex-col items-center text-center">
+                <span className="font-bold text-sm sm:text-lg text-white truncate w-full px-2">{cat.label}</span>
+                <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-0.5">Artista</span>
               </div>
             </div>
           ))}
@@ -397,6 +671,57 @@ export function Home() {
             <TrackGrid>
               {recommendations.map((track) => (
                 <TrackCard key={`rec-${track.id}`} track={track} queue={recommendations} />
+              ))}
+            </TrackGrid>
+          )}
+        </div>
+      </section>
+
+      {/* Álbuns Lendários do Rock */}
+      <section className="space-y-6 px-1 sm:px-0">
+        <div className="flex items-center gap-3 pl-2">
+          <div className="w-10 h-10 bg-rose-500/10 rounded-xl flex items-center justify-center border border-rose-500/20">
+             <Play className="w-5 h-5 text-rose-500 fill-current" />
+          </div>
+          <h2 className="text-xl sm:text-4xl font-brand text-white">Álbuns Lendários</h2>
+        </div>
+        <div className="mt-2">
+            {isLoading ? <LoadingState /> : (
+              <div className="flex gap-4 sm:gap-8 overflow-x-auto pb-8 no-scrollbar snap-x px-1 sm:px-0 scroll-smooth">
+                 {rockClassics.map((track) => (
+                    <div 
+                      key={`rock-album-${track.id}`}
+                      onClick={() => playTrack(track, rockClassics)}
+                      className="flex-shrink-0 w-[200px] sm:w-[280px] group flex flex-col gap-4 p-4 sm:p-5 rounded-[2.5rem] bg-zinc-900/30 hover:bg-zinc-800 transition-all cursor-pointer shadow-xl border border-white/5 snap-start"
+                    >
+                        <div className="aspect-square relative rounded-[1.8rem] overflow-hidden bg-zinc-800 shadow-2xl">
+                            <img src={track.image.replace("600x600bb.jpg", "300x300bb.jpg")} alt={track.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
+                            <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
+                            <div className="absolute inset-x-0 bottom-0 p-5 bg-gradient-to-t from-black/90 to-transparent translate-y-full group-hover:translate-y-0 transition-transform">
+                                <span className="text-white font-black text-sm block truncate">{track.name}</span>
+                            </div>
+                        </div>
+                        <div className="px-1 text-center sm:text-left">
+                            <span className="font-brand text-2xl sm:text-3xl text-white truncate leading-tight block">{track.artist}</span>
+                            <span className="text-[9px] text-zinc-500 font-bold tracking-[0.3em] uppercase mt-2 block">Legendary Album</span>
+                        </div>
+                    </div>
+                 ))}
+              </div>
+            )}
+        </div>
+      </section>
+
+      {/* Hinos do Rock (Mais ouvidas) */}
+      <section className="space-y-6 px-1 sm:px-0">
+        <div className="flex items-center gap-2 pl-2">
+          <h2 className="text-xl sm:text-3xl font-black text-white tracking-tight">Hinos do Rock</h2>
+        </div>
+        <div className="mt-4">
+          {isLoading ? <LoadingState /> : (
+            <TrackGrid>
+              {rockAnthems.map((track) => (
+                <TrackCard key={`rock-hits-${track.id}`} track={track} queue={rockAnthems} />
               ))}
             </TrackGrid>
           )}

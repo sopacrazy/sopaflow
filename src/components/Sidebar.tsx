@@ -49,13 +49,13 @@ export function Sidebar({ currentTab = "home", onTabChange }: SidebarProps) {
     <>
     <aside className="hidden md:flex flex-col w-[260px] h-full bg-black border-r border-zinc-900 p-6 gap-8 shadow-[10px_0_40px_rgba(0,0,0,0.5)] z-10 relative">
       {/* Logo */}
-      <div className="flex items-center gap-2 text-white">
-        <span className="text-xl font-extrabold tracking-tight text-white uppercase">
-          PUMPBEATS
-        </span>
-        <div className="w-6 h-6 bg-[#a855f7] rounded-full flex items-center justify-center ml-1 shadow-md shadow-[#a855f7]/20">
-            <Headphones className="w-3.5 h-3.5 text-black" />
-        </div>
+      <div className="flex items-center gap-3 mb-2 px-1">
+        <img 
+          src="/logopb.png" 
+          alt="PumpBeats Logo" 
+          className="h-10 w-auto object-contain cursor-pointer" 
+          onClick={handleGoHome}
+        />
       </div>
 
       {/* Navigation */}

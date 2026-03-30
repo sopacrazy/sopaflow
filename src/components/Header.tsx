@@ -1,4 +1,5 @@
 import { Headphones, Heart, Home } from "lucide-react";
+import { Link } from "react-router-dom";
 import { cn } from "../utils/cn";
 
 interface HeaderProps {
@@ -10,12 +11,9 @@ export function Header({ currentTab = "home", onTabChange }: HeaderProps) {
   return (
     <header className="fixed top-0 left-0 right-0 z-40 bg-zinc-950/80 backdrop-blur-md border-b border-zinc-800/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-2 text-indigo-400">
-          <Headphones className="w-6 h-6" />
-          <span className="text-xl font-semibold tracking-tight text-zinc-100">
-            PumpBeats
-          </span>
-        </div>
+        <Link to="/" className="flex items-center">
+            <img src="/logopb.png" alt="PumpBeats Logo" className="h-10 w-auto object-contain" />
+        </Link>
         
         {onTabChange && (
           <nav className="flex items-center gap-1 sm:gap-2 bg-zinc-900/50 p-1 rounded-full border border-zinc-800/50">
